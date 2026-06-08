@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">FoodRush</string>
+    <string name="title_activity_splash">SplashActivity</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="title_activity_dashboard">DashboardActivity</string>
+    <string name="title_activity_register">RegisterActivity</string>
+    <string name="title_activity_forgot_password">ForgotPasswordActivity</string>
+    <string name="title_activity_navigation">NavigationActivity</string>
+</resources>

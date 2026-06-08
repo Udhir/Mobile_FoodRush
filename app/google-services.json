@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "720859893890",
+    "project_id": "foodrush-1f69a",
+    "storage_bucket": "foodrush-1f69a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:720859893890:android:313335e7c3155087c4e49b",
+        "android_client_info": {
+          "package_name": "com.example.foodrush"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZpXeOdCmEhxnB0JeBpHchyotcLQZue2M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

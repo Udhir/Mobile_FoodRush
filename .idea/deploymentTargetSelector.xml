@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="deploymentTargetSelector">
+    <selectionStates>
+      <SelectionState runConfigName="app">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-05-26T13:26:59.967990100Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\user\.android\avd\Pixel_10_Pro_XL.avd" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="SplashBody">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-06-05T15:50:14.441562100Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\user\.android\avd\Medium_Phone.avd" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="SplashBody (2)">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-06-08T10:00:35.943252800Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\user\.android\avd\Pixel_10_Pro_XL.avd" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="Login">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-06-08T10:13:43.074876600Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\user\.android\avd\Pixel_10_Pro_XL_2.avd" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="Login (1)">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-06-08T10:13:43.074876600Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\user\.android\avd\Pixel_10_Pro_XL_2.avd" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="SplashBody (1)">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-06-05T15:50:14.441562100Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\user\.android\avd\Medium_Phone.avd" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
+      </SelectionState>
+    </selectionStates>
+  </component>
+</project>
