@@ -1,12 +1,12 @@
 package com.example.foodrush
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -34,13 +33,22 @@ import com.example.foodrush.ui.theme.FoodRushTheme
 import com.example.foodrush.ui.theme.OrangePrimary
 import com.example.foodrush.viewmodel.UserViewModel
 
+// Safe way to get Activity from Context in Compose
+fun Context.getActivity(): Activity? = when (this) {
+    is Activity -> this
+    is android.content.ContextWrapper -> baseContext.getActivity()
+    else -> null
+}
+
 class Login : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // REMOVED enableEdgeToEdge() to fix keyboard overlap and black screen
         setContent {
             FoodRushTheme {
-                LoginBody()
+                Surface(modifier = Modifier.fillMaxSize(), color = OrangePrimary) {
+                    LoginBody()
+                }
             }
         }
     }
@@ -56,28 +64,24 @@ fun LoginBody() {
     var isLoading by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-    val activity = context as? Activity
+    val activity = context.getActivity()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(OrangePrimary)
-            .systemBarsPadding()
-    ) {
+    Column(modifier = Modifier.fillMaxSize()) {
+
+        // Header
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 60.dp, bottom = 40.dp),
+                .padding(top = 40.dp, bottom = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text("FoodRush", fontSize = 42.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
             Text("Deliciousness Delivered", fontSize = 16.sp, color = Color.White.copy(alpha = 0.8f))
         }
 
+        // Bottom White Card
         Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
+            modifier = Modifier.fillMaxSize(),
             color = Color.White,
             shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp)
         ) {
@@ -85,8 +89,7 @@ fun LoginBody() {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(30.dp)
-                    .verticalScroll(rememberScrollState())
-                    .imePadding()
+                    .verticalScroll(rememberScrollState()) // Allows scrolling when keyboard opens
             ) {
                 Text("Welcome Back", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                 Text("Login to your account", fontSize = 14.sp, color = Color.Gray)
@@ -100,10 +103,11 @@ fun LoginBody() {
                     label = { Text("Email", color = Color.Gray) },
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true,
-                    textStyle = TextStyle(color = Color.Black, fontSize = 16.sp), // FORCES BLACK TEXT
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                     trailingIcon = { Icon(painterResource(R.drawable.baseline_email_24), contentDescription = null, tint = Color.Gray) },
                     colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
                         focusedBorderColor = OrangePrimary,
                         cursorColor = OrangePrimary
                     )
@@ -118,7 +122,6 @@ fun LoginBody() {
                     label = { Text("Password", color = Color.Gray) },
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true,
-                    textStyle = TextStyle(color = Color.Black, fontSize = 16.sp), // FORCES BLACK TEXT
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
                     visualTransformation = if (visibility) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
@@ -130,6 +133,8 @@ fun LoginBody() {
                         }
                     },
                     colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
                         focusedBorderColor = OrangePrimary,
                         cursorColor = OrangePrimary
                     )
@@ -142,7 +147,6 @@ fun LoginBody() {
                         .padding(top = 8.dp)
                         .clickable {
                             context.startActivity(Intent(context, ForgotPasswordActivity::class.java))
-                            // Removed activity.finish() to prevent black screen
                         },
                     color = OrangePrimary,
                     fontWeight = FontWeight.SemiBold,
@@ -165,6 +169,7 @@ fun LoginBody() {
                                 val intent = Intent(context, Dashboard::class.java)
                                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                 context.startActivity(intent)
+                                activity?.finish()
                             } else {
                                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                             }
@@ -192,7 +197,7 @@ fun LoginBody() {
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.clickable {
                             context.startActivity(Intent(context, Registration::class.java))
-                            // Removed activity.finish() to prevent black screen
+                            activity?.finish()
                         }
                     )
                 }

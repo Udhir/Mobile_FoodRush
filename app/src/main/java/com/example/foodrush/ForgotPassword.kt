@@ -5,8 +5,8 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,7 +18,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -33,10 +32,11 @@ class ForgotPasswordActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val userViewModel = UserViewModel(UserRepoImpl())
-        enableEdgeToEdge()
         setContent {
             FoodRushTheme {
-                ForgotPasswordScreen(userViewModel)
+                Surface(modifier = Modifier.fillMaxSize(), color = OrangePrimary) {
+                    ForgotPasswordScreen(userViewModel)
+                }
             }
         }
     }
@@ -47,28 +47,24 @@ class ForgotPasswordActivity : ComponentActivity() {
 fun ForgotPasswordScreen(userViewModel: UserViewModel) {
     var email by remember { mutableStateOf("") }
     val context = LocalContext.current
-    val activity = context as? Activity
+    val activity = context.getActivity()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(OrangePrimary)
-            .systemBarsPadding()
-    ) {
+    Column(modifier = Modifier.fillMaxSize()) {
+
+        // Header
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 60.dp, bottom = 40.dp),
+                .padding(top = 40.dp, bottom = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text("Reset Password", fontSize = 32.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
             Text("Don't worry, we've got you covered", fontSize = 16.sp, color = Color.White.copy(alpha = 0.8f))
         }
 
+        // Bottom White Card
         Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
+            modifier = Modifier.fillMaxSize(),
             color = Color.White,
             shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp)
         ) {
@@ -77,7 +73,6 @@ fun ForgotPasswordScreen(userViewModel: UserViewModel) {
                     .fillMaxSize()
                     .padding(30.dp)
                     .verticalScroll(rememberScrollState())
-                    .imePadding()
             ) {
                 Text(
                     "Enter your email and we'll send you a link to get back into your account.",
@@ -95,9 +90,11 @@ fun ForgotPasswordScreen(userViewModel: UserViewModel) {
                     label = { Text("Email Address", color = Color.Gray) },
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true,
-                    textStyle = TextStyle(color = Color.Black, fontSize = 16.sp), // FORCES BLACK TEXT
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Done),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary)
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary
+                    )
                 )
 
                 Spacer(Modifier.height(40.dp))
@@ -125,7 +122,7 @@ fun ForgotPasswordScreen(userViewModel: UserViewModel) {
                 Spacer(Modifier.height(20.dp))
 
                 TextButton(
-                    onClick = { activity?.finish() }, // Safely closes without crashing
+                    onClick = { activity?.finish() },
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
                     Text("Back to Login", color = OrangePrimary, fontWeight = FontWeight.Bold)

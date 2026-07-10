@@ -1,12 +1,10 @@
 package com.example.foodrush
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -39,10 +36,11 @@ import com.google.firebase.auth.FirebaseAuth
 class Registration : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             FoodRushTheme {
-                RegistrationBody()
+                Surface(modifier = Modifier.fillMaxSize(), color = OrangePrimary) {
+                    RegistrationBody()
+                }
             }
         }
     }
@@ -61,14 +59,11 @@ fun RegistrationBody() {
     var isLoading by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-    val activity = context as? Activity
+    val activity = context.getActivity()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(OrangePrimary)
-            .systemBarsPadding()
-    ) {
+    Column(modifier = Modifier.fillMaxSize()) {
+
+        // Header
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -79,10 +74,9 @@ fun RegistrationBody() {
             Text("Start your food journey today", fontSize = 16.sp, color = Color.White.copy(alpha = 0.8f))
         }
 
+        // Bottom White Card
         Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
+            modifier = Modifier.fillMaxSize(),
             color = Color.White,
             shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp)
         ) {
@@ -91,7 +85,6 @@ fun RegistrationBody() {
                     .fillMaxSize()
                     .padding(30.dp)
                     .verticalScroll(rememberScrollState())
-                    .imePadding()
             ) {
                 Text("Create Account", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                 Spacer(Modifier.height(25.dp))
@@ -103,9 +96,11 @@ fun RegistrationBody() {
                     label = { Text("Full Name", color = Color.Gray) },
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true,
-                    textStyle = TextStyle(color = Color.Black, fontSize = 16.sp), // FORCES BLACK TEXT
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary)
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary
+                    )
                 )
 
                 Spacer(Modifier.height(15.dp))
@@ -117,9 +112,11 @@ fun RegistrationBody() {
                     label = { Text("Email", color = Color.Gray) },
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true,
-                    textStyle = TextStyle(color = Color.Black, fontSize = 16.sp), // FORCES BLACK TEXT
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary)
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary
+                    )
                 )
 
                 Spacer(Modifier.height(15.dp))
@@ -131,7 +128,6 @@ fun RegistrationBody() {
                     label = { Text("Password", color = Color.Gray) },
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true,
-                    textStyle = TextStyle(color = Color.Black, fontSize = 16.sp), // FORCES BLACK TEXT
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
                     visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
@@ -139,7 +135,10 @@ fun RegistrationBody() {
                             Icon(painterResource(if (passwordVisibility) R.drawable.baseline_visibility_24 else R.drawable.outline_visibility_off_24), contentDescription = null, tint = Color.Gray)
                         }
                     },
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary)
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary
+                    )
                 )
 
                 Spacer(Modifier.height(15.dp))
@@ -151,7 +150,6 @@ fun RegistrationBody() {
                     label = { Text("Confirm Password", color = Color.Gray) },
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true,
-                    textStyle = TextStyle(color = Color.Black, fontSize = 16.sp), // FORCES BLACK TEXT
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
                     visualTransformation = if (confirmPasswordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
@@ -159,7 +157,10 @@ fun RegistrationBody() {
                             Icon(painterResource(if (confirmPasswordVisibility) R.drawable.baseline_visibility_24 else R.drawable.outline_visibility_off_24), contentDescription = null, tint = Color.Gray)
                         }
                     },
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary)
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
+                        focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary
+                    )
                 )
 
                 Spacer(Modifier.height(30.dp))
@@ -185,7 +186,8 @@ fun RegistrationBody() {
                                     isLoading = false
                                     if (dbSuccess) {
                                         Toast.makeText(context, "Registration Successful", Toast.LENGTH_SHORT).show()
-                                        activity?.finish() // Go back to login
+                                        context.startActivity(Intent(context, Login::class.java))
+                                        activity?.finish()
                                     } else {
                                         Toast.makeText(context, dbMsg, Toast.LENGTH_SHORT).show()
                                     }
@@ -217,7 +219,8 @@ fun RegistrationBody() {
                         color = OrangePrimary,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.clickable {
-                            activity?.finish() // Simply closes this screen to reveal Login
+                            context.startActivity(Intent(context, Login::class.java))
+                            activity?.finish()
                         }
                     )
                 }
