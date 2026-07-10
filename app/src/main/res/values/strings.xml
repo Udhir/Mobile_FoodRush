@@ -6,4 +6,11 @@
     <string name="title_activity_register">RegisterActivity</string>
     <string name="title_activity_forgot_password">ForgotPasswordActivity</string>
     <string name="title_activity_navigation">NavigationActivity</string>
+    <string name="title_activity_food_details">FoodDetails</string>
+    <string name="title_activity_cart_screen">CartScreen</string>
+    <string name="title_activity_checkout">CheckoutActivity</string>
+    <string name="title_activity_order_history_screen">OrderHistoryScreen</string>
+    <string name="title_activity_profile_screen">ProfileScreen</string>
+    <string name="title_activity_edit_profile">EditProfileActivity</string>
+    <string name="title_activity_add_food">AddFoodActivity</string>
 </resources>

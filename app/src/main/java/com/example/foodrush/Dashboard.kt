@@ -131,7 +131,7 @@ fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
 @Composable
 fun CategoriesSection() {
     val categories = listOf("All", "Burger", "Pizza", "Pasta", "Sushi", "Drinks")
-    
+
     Column(modifier = Modifier.padding(top = 20.dp)) {
         Text(
             "Categories",
@@ -216,9 +216,9 @@ fun PopularSection() {
             Text("Popular Near You", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Text("See All", color = OrangePrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
         }
-        
+
         Spacer(Modifier.height(10.dp))
-        
+
         // Using a Row with local items since I have limited assets
         Column(
             modifier = Modifier.padding(horizontal = 20.dp),
