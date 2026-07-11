@@ -8,11 +8,11 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
 class UserRepoImpl : UserRepo {
-    val auth = FirebaseAuth.getInstance()
+    private val auth by lazy { FirebaseAuth.getInstance() }
 
-    val database = FirebaseDatabase.getInstance()
+    private val database by lazy { FirebaseDatabase.getInstance() }
 
-    val ref = database.getReference("users")
+    private val ref by lazy { database.getReference("users") }
 
     override fun login(
         email: String,

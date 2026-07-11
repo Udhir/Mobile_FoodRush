@@ -1,10 +1,8 @@
 package com.example.foodrush
 
-import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -24,8 +22,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.foodrush.model.UserModel
 import com.example.foodrush.repo.UserRepoImpl
 import com.example.foodrush.ui.theme.FoodRushTheme
@@ -36,20 +37,13 @@ import com.google.firebase.auth.FirebaseAuth
 class Registration : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            FoodRushTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = OrangePrimary) {
-                    RegistrationBody()
-                }
-            }
-        }
+        // Fallback for old activity entry point
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegistrationBody() {
-    val viewModel = remember { UserViewModel(UserRepoImpl()) }
+fun RegistrationBody(navController: NavHostController, viewModel: UserViewModel) {
     var email by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -59,9 +53,8 @@ fun RegistrationBody() {
     var isLoading by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-    val activity = context.getActivity()
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize().background(OrangePrimary)) {
 
         // Header
         Column(
@@ -98,8 +91,10 @@ fun RegistrationBody() {
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
-                        focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedBorderColor = OrangePrimary,
+                        cursorColor = OrangePrimary
                     )
                 )
 
@@ -114,8 +109,10 @@ fun RegistrationBody() {
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
-                        focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedBorderColor = OrangePrimary,
+                        cursorColor = OrangePrimary
                     )
                 )
 
@@ -136,8 +133,10 @@ fun RegistrationBody() {
                         }
                     },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
-                        focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedBorderColor = OrangePrimary,
+                        cursorColor = OrangePrimary
                     )
                 )
 
@@ -158,8 +157,10 @@ fun RegistrationBody() {
                         }
                     },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
-                        focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedBorderColor = OrangePrimary,
+                        cursorColor = OrangePrimary
                     )
                 )
 
@@ -186,8 +187,7 @@ fun RegistrationBody() {
                                     isLoading = false
                                     if (dbSuccess) {
                                         Toast.makeText(context, "Registration Successful", Toast.LENGTH_SHORT).show()
-                                        context.startActivity(Intent(context, Login::class.java))
-                                        activity?.finish()
+                                        navController.navigate(Screen.Login.route)
                                     } else {
                                         Toast.makeText(context, dbMsg, Toast.LENGTH_SHORT).show()
                                     }
@@ -219,12 +219,19 @@ fun RegistrationBody() {
                         color = OrangePrimary,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.clickable {
-                            context.startActivity(Intent(context, Login::class.java))
-                            activity?.finish()
+                            navController.navigate(Screen.Login.route)
                         }
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+@Preview(showBackground = true)
+fun RegistrationBodyPreview(){
+    FoodRushTheme {
+        RegistrationBody(rememberNavController(), UserViewModel(UserRepoImpl()))
     }
 }

@@ -4,6 +4,7 @@ package com.example.foodrush.viewmodel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.foodrush.model.FoodModel
+import com.example.foodrush.model.CategoryModel
 import com.example.foodrush.repo.Foodrepo
 
 class FoodViewModel(val repo: Foodrepo) : ViewModel() {
@@ -37,5 +38,13 @@ class FoodViewModel(val repo: Foodrepo) : ViewModel() {
             _loading.value = false
             _foods.value = if (success) data else emptyList()
         }
+    }
+
+    fun deleteFood(id: String, callback: (Boolean, String) -> Unit) {
+        repo.deleteFood(id, callback)
+    }
+
+    fun updateFood(id: String, data: Map<String, Any>, callback: (Boolean, String) -> Unit) {
+        repo.updateFood(id, data, callback)
     }
 }

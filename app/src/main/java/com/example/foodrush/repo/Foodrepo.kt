@@ -1,6 +1,7 @@
 package com.example.foodrush.repo
 
 import com.example.foodrush.model.FoodModel
+import com.example.foodrush.model.CategoryModel
 
 interface Foodrepo {
 
@@ -10,4 +11,5 @@ interface Foodrepo {
         fun getFoodById(id: String, callback: (Boolean, String, FoodModel?) -> Unit)
         fun getAllCategories(callback: (Boolean, String, List<CategoryModel>) -> Unit)
         fun deleteFood(id: String, callback: (Boolean, String) -> Unit)
+        fun updateFood(id: String, data: Map<String, Any>, callback: (Boolean, String) -> Unit)
     }

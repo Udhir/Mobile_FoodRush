@@ -1,6 +1,7 @@
 package com.example.foodrush.repo
 
 import com.example.foodrush.model.FoodModel
+import com.example.foodrush.model.CategoryModel
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -8,9 +9,9 @@ import com.google.firebase.database.ValueEventListener
 
 class FoodRepoImpl : Foodrepo {
 
-    private val database = FirebaseDatabase.getInstance()
-    private val foodRef = database.getReference("foods")
-    private val categoryRef = database.getReference("categories")
+    private val database by lazy { FirebaseDatabase.getInstance() }
+    private val foodRef by lazy { database.getReference("foods") }
+    private val categoryRef by lazy { database.getReference("categories") }
 
     override fun addFood(food: FoodModel, callback: (Boolean, String) -> Unit) {
         val id = foodRef.push().key ?: return callback(false, "Failed to generate ID")
@@ -68,4 +69,12 @@ class FoodRepoImpl : Foodrepo {
         }
     }
 
+    override fun updateFood(id: String, data: Map<String, Any>, callback: (Boolean, String) -> Unit) {
+        foodRef.child(id).updateChildren(data).addOnCompleteListener {
+            if (it.isSuccessful) callback(true, "Updated") else callback(
+                false,
+                "${it.exception?.message}"
+            )
+        }
+    }
 }

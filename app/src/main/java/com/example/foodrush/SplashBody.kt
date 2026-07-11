@@ -33,29 +33,27 @@ class SplashBody : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            Splash()
+            SplashBody()
         }
     }
 }
 
 @Composable
-fun Splash() {
-
+fun Splash(navController: androidx.navigation.NavHostController) {
     val context = LocalContext.current
-    val activity = context as? Activity
 
     LaunchedEffect(Unit) {
         delay(3000)
-
         val currentUser = FirebaseAuth.getInstance().currentUser
-        val intent = if (currentUser != null) {
-            Intent(context, MainActivity::class.java)
+        if (currentUser != null) {
+            navController.navigate(Screen.Dashboard.route) {
+                popUpTo(Screen.Splash.route) { inclusive = true }
+            }
         } else {
-            Intent(context, Login::class.java)
+            navController.navigate(Screen.Login.route) {
+                popUpTo(Screen.Splash.route) { inclusive = true }
+            }
         }
-        context.startActivity(intent)
-
-        activity?.finish() // SAFE now
     }
 
     Column(
@@ -81,5 +79,5 @@ fun Splash() {
 @Preview
 @Composable
 fun SplashPreview() {
-    Splash()
+    SplashBody()
 }

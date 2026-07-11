@@ -1,8 +1,5 @@
 package com.example.foodrush
 
-import android.app.Activity
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -26,47 +23,34 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.foodrush.repo.UserRepoImpl
 import com.example.foodrush.ui.theme.FoodRushTheme
 import com.example.foodrush.ui.theme.OrangePrimary
 import com.example.foodrush.viewmodel.UserViewModel
 
-// Safe way to get Activity from Context in Compose
-fun Context.getActivity(): Activity? = when (this) {
-    is Activity -> this
-    is android.content.ContextWrapper -> baseContext.getActivity()
-    else -> null
-}
-
 class Login : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // REMOVED enableEdgeToEdge() to fix keyboard overlap and black screen
-        setContent {
-            FoodRushTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = OrangePrimary) {
-                    LoginBody()
-                }
-            }
-        }
+        // Fallback for old activity entry point
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
-fun LoginBody() {
-    val viewModel = remember { UserViewModel(UserRepoImpl()) }
+fun LoginBody(navController: NavHostController, viewModel: UserViewModel) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var visibility by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-    val activity = context.getActivity()
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize().background(OrangePrimary)) {
 
         // Header
         Column(
@@ -89,7 +73,7 @@ fun LoginBody() {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(30.dp)
-                    .verticalScroll(rememberScrollState()) // Allows scrolling when keyboard opens
+                    .verticalScroll(rememberScrollState())
             ) {
                 Text("Welcome Back", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                 Text("Login to your account", fontSize = 14.sp, color = Color.Gray)
@@ -146,7 +130,7 @@ fun LoginBody() {
                         .align(Alignment.End)
                         .padding(top = 8.dp)
                         .clickable {
-                            context.startActivity(Intent(context, ForgotPasswordActivity::class.java))
+                            navController.navigate(Screen.ForgotPassword.route)
                         },
                     color = OrangePrimary,
                     fontWeight = FontWeight.SemiBold,
@@ -166,10 +150,9 @@ fun LoginBody() {
                             isLoading = false
                             if (success) {
                                 Toast.makeText(context, "Login Successful", Toast.LENGTH_SHORT).show()
-                                val intent = Intent(context, Dashboard::class.java)
-                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                context.startActivity(intent)
-                                activity?.finish()
+                                navController.navigate(Screen.Dashboard.route) {
+                                    popUpTo(Screen.Login.route) { inclusive = true }
+                                }
                             } else {
                                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                             }
@@ -196,12 +179,20 @@ fun LoginBody() {
                         color = OrangePrimary,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.clickable {
-                            context.startActivity(Intent(context, Registration::class.java))
-                            activity?.finish()
+                            navController.navigate(Screen.Registration.route)
                         }
                     )
                 }
             }
         }
+    }
+}
+
+
+@Composable
+@Preview(showBackground = true)
+fun LoginBodyPreview(){
+    FoodRushTheme {
+        LoginBody(rememberNavController(), UserViewModel(UserRepoImpl()))
     }
 }

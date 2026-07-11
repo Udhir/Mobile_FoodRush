@@ -1,10 +1,8 @@
 package com.example.foodrush
 
-import android.app.Activity
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,8 +19,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.foodrush.repo.UserRepoImpl
 import com.example.foodrush.ui.theme.FoodRushTheme
 import com.example.foodrush.ui.theme.OrangePrimary
@@ -31,25 +32,17 @@ import com.example.foodrush.viewmodel.UserViewModel
 class ForgotPasswordActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val userViewModel = UserViewModel(UserRepoImpl())
-        setContent {
-            FoodRushTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = OrangePrimary) {
-                    ForgotPasswordScreen(userViewModel)
-                }
-            }
-        }
+        // Fallback for old activity entry point
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ForgotPasswordScreen(userViewModel: UserViewModel) {
+fun ForgotPasswordScreen(navController: NavHostController, userViewModel: UserViewModel) {
     var email by remember { mutableStateOf("") }
     val context = LocalContext.current
-    val activity = context.getActivity()
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize().background(OrangePrimary)) {
 
         // Header
         Column(
@@ -92,8 +85,10 @@ fun ForgotPasswordScreen(userViewModel: UserViewModel) {
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Done),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.Black, unfocusedTextColor = Color.Black,
-                        focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedBorderColor = OrangePrimary,
+                        cursorColor = OrangePrimary
                     )
                 )
 
@@ -108,7 +103,7 @@ fun ForgotPasswordScreen(userViewModel: UserViewModel) {
                         userViewModel.forgotPassword(email) { success, msg ->
                             Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
                             if (success) {
-                                activity?.finish()
+                                navController.popBackStack()
                             }
                         }
                     },
@@ -122,12 +117,20 @@ fun ForgotPasswordScreen(userViewModel: UserViewModel) {
                 Spacer(Modifier.height(20.dp))
 
                 TextButton(
-                    onClick = { activity?.finish() },
+                    onClick = { navController.popBackStack() },
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
                     Text("Back to Login", color = OrangePrimary, fontWeight = FontWeight.Bold)
                 }
             }
         }
+    }
+}
+
+@Composable
+@Preview(showBackground = true)
+fun ForgotPasswordScreenPreview(){
+    FoodRushTheme {
+        ForgotPasswordScreen(rememberNavController(), UserViewModel(UserRepoImpl()))
     }
 }

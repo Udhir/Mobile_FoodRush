@@ -16,6 +16,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,8 +30,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.foodrush.model.FoodModel
 import com.example.foodrush.repo.FoodRepoImpl
@@ -55,10 +62,19 @@ class AddFoodActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddFoodScreen(
-    onClose: () -> Unit
+    foodId: String? = null,
+    onClose: () -> Unit,
+    foodViewModel: FoodViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return FoodViewModel(FoodRepoImpl()) as T
+        }
+    }),
+    imageViewModel: ImageViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return ImageViewModel(ImageRepoImpl()) as T
+        }
+    })
 ) {
-    val foodViewModel = remember { FoodViewModel(FoodRepoImpl()) }
-    val imageViewModel = remember { ImageViewModel(ImageRepoImpl()) }
     val context = LocalContext.current
 
     var name by remember { mutableStateOf("") }
@@ -66,7 +82,24 @@ fun AddFoodScreen(
     var price by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var existingImageUrl by remember { mutableStateOf<String?>(null) }
     var isUploading by remember { mutableStateOf(false) }
+    var isEditMode by remember { mutableStateOf(false) }
+
+    LaunchedEffect(foodId) {
+        if (foodId != null) {
+            isEditMode = true
+            foodViewModel.repo.getFoodById(foodId) { success, _, food ->
+                if (success && food != null) {
+                    name = food.name
+                    description = food.description
+                    price = food.price.toString()
+                    category = food.category
+                    existingImageUrl = food.imageUrl
+                }
+            }
+        }
+    }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -85,22 +118,38 @@ fun AddFoodScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                IconButton(onClick = onClose) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_arrow_back_24),
-                        contentDescription = "Back",
-                        tint = Color.White
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onClose) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
+                    }
+                    Text(
+                        text = if (isEditMode) "Edit Food" else "Add New Food",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.White,
+                        modifier = Modifier.padding(start = 10.dp)
                     )
                 }
-                Text(
-                    text = "Add New Food",
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color.White,
-                    modifier = Modifier.padding(start = 10.dp)
-                )
+
+                if (isEditMode) {
+                    IconButton(onClick = {
+                        foodId?.let {
+                            foodViewModel.deleteFood(it) { success, msg ->
+                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                if (success) onClose()
+                            }
+                        }
+                    }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.White)
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -132,6 +181,13 @@ fun AddFoodScreen(
                                 AsyncImage(
                                     model = imageUri,
                                     contentDescription = "Selected Image",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else if (existingImageUrl != null) {
+                                AsyncImage(
+                                    model = existingImageUrl,
+                                    contentDescription = "Existing Image",
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier.fillMaxSize()
                                 )
@@ -194,8 +250,7 @@ fun AddFoodScreen(
 
                         Button(
                             onClick = {
-                                val currentUri = imageUri
-                                if (name.isEmpty() || price.isEmpty() || category.isEmpty() || currentUri == null) {
+                                if (name.isEmpty() || price.isEmpty() || category.isEmpty() || (imageUri == null && existingImageUrl == null)) {
                                     Toast.makeText(context, "Please fill all fields and select an image", Toast.LENGTH_SHORT).show()
                                     return@Button
                                 }
@@ -203,28 +258,50 @@ fun AddFoodScreen(
                                 isUploading = true
                                 val priceDouble = price.toDoubleOrNull() ?: 0.0
 
-                                imageViewModel.uploadImage(context, currentUri) { imageUrl ->
-                                    if (imageUrl != null) {
-                                        val foodModel = FoodModel(
-                                            name = name,
-                                            description = description,
-                                            price = priceDouble,
-                                            category = category,
-                                            imageUrl = imageUrl,
-                                            isAvailable = true
-                                        )
+                                val saveFood = { finalImageUrl: String ->
+                                    val foodData = FoodModel(
+                                        id = foodId ?: "",
+                                        name = name,
+                                        description = description,
+                                        price = priceDouble,
+                                        category = category,
+                                        imageUrl = finalImageUrl,
+                                        isAvailable = true
+                                    )
 
-                                        foodViewModel.repo.addFood(foodModel) { dbSuccess, msg ->
+                                    if (isEditMode) {
+                                        val map = mapOf(
+                                            "name" to name,
+                                            "description" to description,
+                                            "price" to priceDouble,
+                                            "category" to category,
+                                            "imageUrl" to finalImageUrl
+                                        )
+                                        foodViewModel.updateFood(foodId!!, map) { success, msg ->
                                             isUploading = false
                                             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                                            if (dbSuccess) {
-                                                onClose()
-                                            }
+                                            if (success) onClose()
                                         }
                                     } else {
-                                        isUploading = false
-                                        Toast.makeText(context, "Failed to upload image", Toast.LENGTH_SHORT).show()
+                                        foodViewModel.repo.addFood(foodData) { success, msg ->
+                                            isUploading = false
+                                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                            if (success) onClose()
+                                        }
                                     }
+                                }
+
+                                if (imageUri != null) {
+                                    imageViewModel.uploadImage(context, imageUri!!) { imageUrl ->
+                                        if (imageUrl != null) {
+                                            saveFood(imageUrl)
+                                        } else {
+                                            isUploading = false
+                                            Toast.makeText(context, "Failed to upload image", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                } else {
+                                    saveFood(existingImageUrl!!)
                                 }
                             },
                             modifier = Modifier
@@ -239,12 +316,22 @@ fun AddFoodScreen(
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Text("SAVING DATA...", fontWeight = FontWeight.Bold)
                             } else {
-                                Text("ADD FOOD ITEM", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                Text(if (isEditMode) "UPDATE FOOD ITEM" else "ADD FOOD ITEM", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Preview
+@Composable
+fun AddFoodScreenPreview() {
+    FoodRushTheme {
+        AddFoodScreen(
+            onClose = {}
+        )
     }
 }

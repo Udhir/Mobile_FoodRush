@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
@@ -31,25 +32,53 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
+import com.example.foodrush.model.FoodModel
+import com.example.foodrush.repo.FoodRepoImpl
+import com.example.foodrush.ui.theme.FoodRushTheme
 import com.example.foodrush.ui.theme.OrangePrimary
+import com.example.foodrush.viewmodel.FoodViewModel
 
 class Dashboard : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent { DashboardBody() }
+        setContent { 
+            FoodRushTheme {
+                AppNavigation(startDestination = Screen.Dashboard.route)
+            }
+        }
     }
 }
 
 @Composable
-fun DashboardBody() {
+fun DashboardBody(navController: NavHostController, viewModel: FoodViewModel) {
     var searchQuery by remember { mutableStateOf("") }
+    val foods by viewModel.foods.observeAsState(emptyList())
+    val categories by viewModel.categories.observeAsState(emptyList())
+
+    LaunchedEffect(Unit) {
+        viewModel.getAllFood()
+        viewModel.getAllCategories()
+    }
 
     Scaffold(
-        bottomBar = { BottomNavigationBar() }
+        bottomBar = { BottomNavigationBar(navController) },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navController.navigate(Screen.AddFood.route) },
+                containerColor = OrangePrimary,
+                contentColor = Color.White
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Food")
+            }
+        }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -58,21 +87,11 @@ fun DashboardBody() {
                 .background(Color(0xFFF8F8F8))
                 .verticalScroll(rememberScrollState())
         ) {
-            // Header Section
             HeaderSection()
-
-            // Search Bar
             SearchBar(searchQuery) { searchQuery = it }
-
-            // Categories Section
-            CategoriesSection()
-
-            // Promotional Banner
+            CategoriesSection(categories.map { it.name })
             PromoBanner()
-
-            // Popular Section
-            PopularSection()
-
+            PopularSection(foods, navController)
             Spacer(Modifier.height(20.dp))
         }
     }
@@ -129,8 +148,8 @@ fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
 }
 
 @Composable
-fun CategoriesSection() {
-    val categories = listOf("All", "Burger", "Pizza", "Pasta", "Sushi", "Drinks")
+fun CategoriesSection(categories: List<String>) {
+    val displayCategories = if (categories.isEmpty()) listOf("All", "Burger", "Pizza", "Pasta", "Sushi", "Drinks") else listOf("All") + categories
 
     Column(modifier = Modifier.padding(top = 20.dp)) {
         Text(
@@ -143,7 +162,7 @@ fun CategoriesSection() {
             contentPadding = PaddingValues(horizontal = 15.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            items(categories) { category ->
+            items(displayCategories) { category ->
                 CategoryItem(category)
             }
         }
@@ -206,7 +225,7 @@ fun PromoBanner() {
 }
 
 @Composable
-fun PopularSection() {
+fun PopularSection(foods: List<FoodModel>, navController: NavHostController) {
     Column(modifier = Modifier.padding(top = 10.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
@@ -219,21 +238,35 @@ fun PopularSection() {
 
         Spacer(Modifier.height(10.dp))
 
-        // Using a Row with local items since I have limited assets
         Column(
             modifier = Modifier.padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(15.dp)
         ) {
-            FoodCard("Beef Burger Deluxe", "Burger King", "4.8", "$12.99", R.drawable.burger)
-            FoodCard("Cheese Burger XL", "McDonald's", "4.5", "$10.50", R.drawable.burgerr)
+            if (foods.isEmpty()) {
+                FoodCard("Beef Burger Deluxe", "Burger King", "4.8", "$12.99", R.drawable.burger)
+                FoodCard("Cheese Burger XL", "McDonald's", "4.5", "$10.50", R.drawable.burgerr)
+            } else {
+                foods.forEach { food ->
+                    FoodCard(
+                        name = food.name,
+                        shop = food.category,
+                        rating = food.rating.toString(),
+                        price = "$${food.price}",
+                        imageUrl = food.imageUrl,
+                        onClick = {
+                            navController.navigate(Screen.FoodDetail.createRoute(food.id))
+                        }
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
-fun FoodCard(name: String, shop: String, rating: String, price: String, imageRes: Int) {
+fun FoodCard(name: String, shop: String, rating: String, price: String, imageRes: Int? = null, imageUrl: String? = null, onClick: () -> Unit = {}) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -242,14 +275,26 @@ fun FoodCard(name: String, shop: String, rating: String, price: String, imageRes
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(imageRes),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(15.dp)),
-                contentScale = ContentScale.Crop
-            )
+            if (imageUrl != null) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(15.dp)),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.burger)
+                )
+            } else if (imageRes != null) {
+                Image(
+                    painter = painterResource(imageRes),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(15.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
             Spacer(Modifier.width(15.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
@@ -267,7 +312,7 @@ fun FoodCard(name: String, shop: String, rating: String, price: String, imageRes
 }
 
 @Composable
-fun BottomNavigationBar() {
+fun BottomNavigationBar(navController: NavHostController) {
     NavigationBar(
         containerColor = Color.White,
         tonalElevation = 8.dp
@@ -276,14 +321,14 @@ fun BottomNavigationBar() {
             icon = { Icon(Icons.Default.Home, contentDescription = null) },
             label = { Text("Home") },
             selected = true,
-            onClick = { },
+            onClick = { navController.navigate(Screen.Dashboard.route) },
             colors = NavigationBarItemDefaults.colors(selectedIconColor = OrangePrimary, selectedTextColor = OrangePrimary)
         )
         NavigationBarItem(
             icon = { Icon(Icons.Default.ShoppingCart, contentDescription = null) },
             label = { Text("Cart") },
             selected = false,
-            onClick = { }
+            onClick = { navController.navigate(Screen.Cart.route) }
         )
         NavigationBarItem(
             icon = { Icon(Icons.Default.Person, contentDescription = null) },
@@ -294,8 +339,10 @@ fun BottomNavigationBar() {
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun DashboardPreview() {
-    DashboardBody()
+    FoodRushTheme {
+        DashboardBody(rememberNavController(), FoodViewModel(FoodRepoImpl()))
+    }
 }
