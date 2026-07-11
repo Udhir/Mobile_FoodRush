@@ -9,6 +9,9 @@ class OrderViewModel(private val repo: OrderRepo) : ViewModel() {
     private val _orders = MutableLiveData<List<OrderModel>>()
     val orders: MutableLiveData<List<OrderModel>> get() = _orders
 
+    private val _allOrders = MutableLiveData<List<OrderModel>>()
+    val allOrders: MutableLiveData<List<OrderModel>> get() = _allOrders
+
     private val _loading = MutableLiveData<Boolean>()
     val loading: MutableLiveData<Boolean> get() = _loading
 
@@ -22,5 +25,17 @@ class OrderViewModel(private val repo: OrderRepo) : ViewModel() {
             _loading.value = false
             _orders.value = if (success) data else emptyList()
         }
+    }
+
+    fun getAllOrders() {
+        _loading.value = true
+        repo.getAllOrders { success, _, data ->
+            _loading.value = false
+            _allOrders.value = if (success) data else emptyList()
+        }
+    }
+
+    fun updateOrderStatus(orderId: String, status: String) {
+        repo.updateOrderStatus(orderId, status) { _, _ -> }
     }
 }

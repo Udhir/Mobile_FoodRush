@@ -1,69 +1,46 @@
 package com.example.foodrush.repo
 
-
 import android.content.Context
-import android.database.Cursor
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
-import android.provider.OpenableColumns
-import com.cloudinary.Cloudinary
-import com.cloudinary.utils.ObjectUtils
-import java.io.InputStream
-import java.util.concurrent.Executors
+import com.google.firebase.storage.FirebaseStorage
+import java.util.UUID
 
 class ImageRepoImpl : ImageRepo {
-    private val cloudinary = Cloudinary(
-        mapOf(
-            "cloud_name" to "dis3fco3j",
-            "api_key" to "531963263852246",
-            "api_secret" to "7RGsBio_XrtoGVYzURm-iXlux9A"
-        )
-    )
+    // 1. Get a reference to Firebase Storage
+    private val storageRef = FirebaseStorage.getInstance().reference
+
     override fun uploadImage(context: Context, imageUri: Uri, callback: (String?) -> Unit) {
-        val executor = Executors.newSingleThreadExecutor()
-        executor.execute {
-            try {
-                val inputStream: InputStream? = context.contentResolver.openInputStream(imageUri)
-                var fileName = getFileNameFromUri(context, imageUri)
+        // 2. Create a unique random file name for the image
+        val fileName = UUID.randomUUID().toString() + ".jpg"
 
-                fileName = fileName?.substringBeforeLast(".") ?: "uploaded_image"
+        // 3. Create a folder in Firebase Storage called "food_images"
+        val imageRef = storageRef.child("food_images/$fileName")
 
-                val response = cloudinary.uploader().upload(
-                    inputStream, ObjectUtils.asMap(
-                        "public_id", fileName,
-                        "resource_type", "image"
-                    )
-                )
-
-                var imageUrl = response["url"] as String?
-
-                imageUrl = imageUrl?.replace("http://", "https://")
-
-                Handler(Looper.getMainLooper()).post {
-                    callback(imageUrl)
+        // 4. Upload the file to Firebase
+        imageRef.putFile(imageUri)
+            .addOnSuccessListener {
+                // 5. If upload succeeds, get the downloadable URL
+                imageRef.downloadUrl.addOnSuccessListener { uri ->
+                    Handler(Looper.getMainLooper()).post {
+                        callback(uri.toString())
+                    }
+                }.addOnFailureListener {
+                    Handler(Looper.getMainLooper()).post {
+                        callback(null)
+                    }
                 }
-
-            } catch (e: Exception) {
-                e.printStackTrace()
+            }
+            .addOnFailureListener {
                 Handler(Looper.getMainLooper()).post {
                     callback(null)
                 }
             }
-        }
     }
 
     override fun getFileNameFromUri(context: Context, uri: Uri): String? {
-        var fileName: String? = null
-        val cursor: Cursor? = context.contentResolver.query(uri, null, null, null, null)
-        cursor?.use {
-            if (it.moveToFirst()) {
-                val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (nameIndex != -1) {
-                    fileName = it.getString(nameIndex)
-                }
-            }
-        }
-        return fileName
+        // We no longer need to parse the real file name because we use a random UUID above!
+        return "image.jpg"
     }
 }

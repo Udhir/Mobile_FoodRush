@@ -52,7 +52,7 @@ dependencies {
     implementation("androidx.compose.runtime:runtime-livedata")
     implementation("androidx.compose.material:material-icons-extended")
 
-    implementation(libs.cloudinary.android)
+    implementation(libs.firebase.storage)
     implementation(libs.coil.compose)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
@@ -73,14 +73,4 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
-}
-
-// THIS IS THE FIX FOR THE 16 KB ERROR
-// It forces Cloudinary's hidden Fresco dependency to use the updated, Android 15-compatible version.
-configurations.all {
-    resolutionStrategy.eachDependency {
-        if (requested.group == "com.facebook.fresco") {
-            useVersion("3.2.0")
-        }
-    }
 }

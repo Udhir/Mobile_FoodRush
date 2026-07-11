@@ -1,11 +1,11 @@
 package com.example.foodrush
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -28,20 +28,30 @@ import com.example.foodrush.ui.theme.*
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 
+import kotlinx.coroutines.*
+
 class SplashBody : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            SplashBody()
+            FoodRushTheme {
+                SplashContent()
+            }
+        }
+        
+        GlobalScope.launch {
+            delay(3000)
+            withContext(Dispatchers.Main) {
+                startActivity(Intent(this@SplashBody, MainActivity::class.java))
+                finish()
+            }
         }
     }
 }
 
 @Composable
 fun Splash(navController: androidx.navigation.NavHostController) {
-    val context = LocalContext.current
-
     LaunchedEffect(Unit) {
         delay(3000)
         val currentUser = FirebaseAuth.getInstance().currentUser
@@ -55,7 +65,11 @@ fun Splash(navController: androidx.navigation.NavHostController) {
             }
         }
     }
+    SplashContent()
+}
 
+@Composable
+fun SplashContent() {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -63,15 +77,12 @@ fun Splash(navController: androidx.navigation.NavHostController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         Image(
             painter = painterResource(R.drawable.logo),
             contentDescription = null,
             modifier = Modifier.size(140.dp)
         )
-
         Spacer(modifier = Modifier.height(20.dp))
-
         CircularProgressIndicator(color = Color.White)
     }
 }
@@ -79,5 +90,5 @@ fun Splash(navController: androidx.navigation.NavHostController) {
 @Preview
 @Composable
 fun SplashPreview() {
-    SplashBody()
+    SplashContent()
 }

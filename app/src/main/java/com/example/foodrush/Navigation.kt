@@ -13,6 +13,7 @@ import com.example.foodrush.repo.UserRepoImpl
 import com.example.foodrush.view.AddFoodScreen
 import com.example.foodrush.viewmodel.FoodViewModel
 import com.example.foodrush.viewmodel.UserViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 sealed class Screen(val route: String) {
     object Splash : Screen("splash")
@@ -34,7 +35,8 @@ sealed class Screen(val route: String) {
 @Composable
 fun AppNavigation(
     navController: NavHostController = rememberNavController(),
-    startDestination: String = Screen.Splash.route
+    // Start from login if not authenticated, splash is now a separate activity
+    startDestination: String = if (FirebaseAuth.getInstance().currentUser != null) Screen.Dashboard.route else Screen.Login.route
 ) {
     val foodViewModel = remember { FoodViewModel(FoodRepoImpl()) }
     val userViewModel = remember { UserViewModel(UserRepoImpl()) }

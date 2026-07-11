@@ -1,8 +1,7 @@
 package com.example.foodrush
 
-import android.widget.Toast
+import android.content.Intent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -22,15 +21,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.foodrush.model.CartModel
-import com.example.foodrush.model.OrderModel
 import com.example.foodrush.repo.CartRepoImpl
 import com.example.foodrush.repo.OrderRepoImpl
-import com.example.foodrush.ui.theme.FoodRushTheme
 import com.example.foodrush.ui.theme.OrangePrimary
 import com.example.foodrush.viewmodel.CartViewModel
 import com.example.foodrush.viewmodel.OrderViewModel
@@ -54,29 +50,37 @@ fun CartScreen(onCheckout: () -> Unit) {
 
     val totalPrice = cartItems.sumOf { it.foodPrice * it.quantity }
 
-    Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F8F8))) {
+    // Removed Scaffold, just returning the Column so it fits inside Dashboard
+    Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F9FA))) {
         Text(
             "My Cart",
-            modifier = Modifier.padding(20.dp),
-            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(top = 40.dp, start = 20.dp, end = 20.dp, bottom = 10.dp),
+            fontWeight = FontWeight.ExtraBold,
             fontSize = 24.sp
         )
 
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(20.dp),
-            verticalArrangement = Arrangement.spacedBy(15.dp)
-        ) {
-            items(cartItems) { item ->
-                CartItemCard(item, cartViewModel)
+        if (cartItems.isEmpty()) {
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Text("Your cart is empty \uD83D\uDE22", color = Color.Gray, fontSize = 16.sp)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(20.dp),
+                verticalArrangement = Arrangement.spacedBy(15.dp)
+            ) {
+                items(cartItems) { item ->
+                    CartItemCard(item, cartViewModel)
+                }
             }
         }
 
+        // Bottom Checkout Box
         Surface(
             modifier = Modifier.fillMaxWidth(),
             color = Color.White,
             shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp),
-            shadowElevation = 8.dp
+            shadowElevation = 16.dp
         ) {
             Column(modifier = Modifier.padding(30.dp)) {
                 Row(
@@ -84,7 +88,7 @@ fun CartScreen(onCheckout: () -> Unit) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("Total Payment", color = Color.Gray, fontSize = 16.sp)
-                    Text("$${String.format(Locale.US, "%.2f", totalPrice)}", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = OrangePrimary)
+                    Text("$${String.format(Locale.US, "%.2f", totalPrice)}", fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, color = OrangePrimary)
                 }
 
                 Spacer(Modifier.height(20.dp))
@@ -92,35 +96,17 @@ fun CartScreen(onCheckout: () -> Unit) {
                 Button(
                     onClick = {
                         if (cartItems.isEmpty()) return@Button
-                        isCheckingOut = true
-                        val order = OrderModel(
-                            userId = userId,
-                            items = cartItems,
-                            totalPrice = totalPrice,
-                            address = "Your Location, City", // Should be dynamic in a real app
-                            status = "Pending"
-                        )
-                        orderViewModel.placeOrder(order) { success, msg ->
-                            if (success) {
-                                cartViewModel.clearCart(userId)
-                                Toast.makeText(context, "Order Placed Successfully!", Toast.LENGTH_SHORT).show()
-                                onCheckout()
-                            } else {
-                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                            }
-                            isCheckingOut = false
-                        }
+
+                        val intent = Intent(context, CheckoutActivity::class.java)
+                        context.startActivity(intent)
+
                     },
                     modifier = Modifier.fillMaxWidth().height(55.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
-                    shape = RoundedCornerShape(15.dp),
+                    shape = RoundedCornerShape(16.dp),
                     enabled = cartItems.isNotEmpty() && !isCheckingOut
                 ) {
-                    if (isCheckingOut) {
-                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                    } else {
-                        Text("Checkout", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    }
+                    Text("Proceed to Checkout", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
         }
@@ -142,14 +128,14 @@ fun CartItemCard(item: CartModel, viewModel: CartViewModel) {
             AsyncImage(
                 model = item.foodImage,
                 contentDescription = null,
-                modifier = Modifier.size(70.dp).clip(RoundedCornerShape(12.dp)),
+                modifier = Modifier.size(70.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFEEEEEE)),
                 contentScale = ContentScale.Crop
             )
             Spacer(Modifier.width(15.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(item.foodName, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text("$${item.foodPrice}", color = OrangePrimary, fontWeight = FontWeight.SemiBold)
-                
+                Text("$${item.foodPrice}", color = OrangePrimary, fontWeight = FontWeight.ExtraBold)
+
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
                     IconButton(
                         onClick = { if (item.quantity > 1) viewModel.updateQuantity(item.cartId, item.quantity - 1) },
@@ -157,9 +143,7 @@ fun CartItemCard(item: CartModel, viewModel: CartViewModel) {
                     ) {
                         Icon(Icons.Default.Remove, contentDescription = null, modifier = Modifier.size(16.dp))
                     }
-                    
                     Text(item.quantity.toString(), modifier = Modifier.padding(horizontal = 12.dp), fontWeight = FontWeight.Bold)
-                    
                     IconButton(
                         onClick = { viewModel.updateQuantity(item.cartId, item.quantity + 1) },
                         modifier = Modifier.size(24.dp).background(OrangePrimary, CircleShape)
@@ -169,16 +153,8 @@ fun CartItemCard(item: CartModel, viewModel: CartViewModel) {
                 }
             }
             IconButton(onClick = { viewModel.removeFromCart(item.cartId) }) {
-                Icon(Icons.Default.Delete, contentDescription = null, tint = Color.Red)
+                Icon(Icons.Default.Delete, contentDescription = null, tint = Color.Red.copy(alpha = 0.8f))
             }
         }
-    }
-}
-
-@Composable
-@Preview(showBackground = true)
-fun CartScreenPreview() {
-    FoodRushTheme {
-        CartScreen {}
     }
 }

@@ -1,125 +1,127 @@
 package com.example.foodrush
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
-import com.example.foodrush.ui.theme.FoodRushTheme
+import com.example.foodrush.repo.UserRepoImpl
 import com.example.foodrush.ui.theme.OrangePrimary
+import com.example.foodrush.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun ProfileScreen(navController: NavHostController) {
-    // Check if we are in preview mode to avoid Firebase initialization error
-    if (LocalInspectionMode.current) {
-        ProfileContent(
-            userName = "User Name",
-            userEmail = "user@example.com",
-            onLogout = {},
-            navController = navController
-        )
-    } else {
-        val auth = FirebaseAuth.getInstance()
-        val user = auth.currentUser
+    val userViewModel = remember { UserViewModel(UserRepoImpl()) }
+    val context = LocalContext.current
+    val auth = FirebaseAuth.getInstance()
+    val userId = auth.currentUser?.uid ?: ""
 
-        ProfileContent(
-            userName = user?.displayName ?: "User Name",
-            userEmail = user?.email ?: "user@example.com",
-            onLogout = {
-                auth.signOut()
-                navController.navigate(Screen.Login.route) {
-                    popUpTo(0) { inclusive = true }
-                }
-            },
-            navController = navController
-        )
-    }
-}
+    LaunchedEffect(Unit) { userViewModel.getUserById(userId) }
+    val user by userViewModel.users.observeAsState(null)
 
-@Composable
-fun ProfileContent(
-    userName: String,
-    userEmail: String,
-    onLogout: () -> Unit,
-    navController: NavHostController
-) {
-    Scaffold(
-        bottomBar = { BottomNavigationBar(navController) }
-    ) { paddingValues ->
-        Column(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8F9FA))
+    ) {
+        // Top Orange Header Banner
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(Color(0xFFF8F8F8))
+                .fillMaxWidth()
+                .height(220.dp)
+                .background(
+                    color = OrangePrimary,
+                    shape = RoundedCornerShape(bottomStart = 30.dp, bottomEnd = 30.dp)
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            // Header
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .background(OrangePrimary),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .clip(CircleShape)
-                            .background(Color.White),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(50.dp), tint = OrangePrimary)
-                    }
-                    Spacer(Modifier.height(10.dp))
-                    Text(userName, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    Text(userEmail, color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(top = 20.dp)) {
+                Box(
+                    modifier = Modifier
+                        .size(90.dp)
+                        .clip(CircleShape)
+                        .background(Color.White),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Person, contentDescription = null, tint = OrangePrimary, modifier = Modifier.size(50.dp))
+                }
+                Spacer(Modifier.height(12.dp))
+                Text(user?.name ?: "Loading...", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Text(user?.email ?: "", color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
+            }
+        }
+
+        Spacer(Modifier.height(20.dp))
+
+        // Profile Options
+        Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+            Text("General", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 10.dp))
+
+            ProfileOptionRow(Icons.Default.Settings, "Edit Profile") {
+                context.startActivity(Intent(context, EditProfileActivity::class.java))
+            }
+            ProfileOptionRow(Icons.Default.ListAlt, "My Order History") {
+                // Future Implementation for Order History Activity
+            }
+
+            if (user?.isAdmin == true) {
+                Spacer(Modifier.height(20.dp))
+                Text("Admin Panel", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 10.dp))
+
+                ProfileOptionRow(Icons.Default.Add, "Add New Food Item") {
+                    navController.navigate(Screen.AddFood.route)
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.weight(1f))
 
-            // Profile Options
-            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                ProfileOption(Icons.Default.ListAlt, "My Orders") {
-                    // Navigate to Orders
-                }
-                ProfileOption(Icons.Default.Settings, "Settings") {
-                    // Navigate to Settings
-                }
-                ProfileOption(Icons.Default.ExitToApp, "Logout", Color.Red) {
-                    onLogout()
-                }
+            Button(
+                onClick = {
+                    auth.signOut()
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().height(55.dp).padding(bottom = 20.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFEBEE), contentColor = Color.Red),
+                shape = RoundedCornerShape(15.dp),
+                elevation = ButtonDefaults.buttonElevation(0.dp)
+            ) {
+                Icon(Icons.Default.ExitToApp, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("LOGOUT", fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
         }
     }
 }
 
 @Composable
-fun ProfileOption(icon: ImageVector, title: String, color: Color = Color.Black, onClick: () -> Unit) {
+fun ProfileOptionRow(icon: ImageVector, label: String, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(vertical = 6.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(15.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -127,23 +129,15 @@ fun ProfileOption(icon: ImageVector, title: String, color: Color = Color.Black, 
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(icon, contentDescription = null, tint = color)
+            Icon(icon, contentDescription = null, tint = OrangePrimary)
             Spacer(Modifier.width(15.dp))
-            Text(title, fontSize = 16.sp, fontWeight = FontWeight.Medium, color = color)
+            Text(label, fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color.Black)
             Spacer(Modifier.weight(1f))
-            Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.Gray)
+            Text(">", color = Color.Gray, fontWeight = FontWeight.Bold)
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ProfileScreenPreview() {
-    FoodRushTheme {
-        ProfileScreen(rememberNavController())
     }
 }

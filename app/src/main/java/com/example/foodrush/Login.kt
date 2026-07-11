@@ -33,14 +33,6 @@ import com.example.foodrush.ui.theme.FoodRushTheme
 import com.example.foodrush.ui.theme.OrangePrimary
 import com.example.foodrush.viewmodel.UserViewModel
 
-class Login : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        // Fallback for old activity entry point
-    }
-}
-
-
 @Composable
 fun LoginBody(navController: NavHostController, viewModel: UserViewModel) {
     var email by remember { mutableStateOf("") }

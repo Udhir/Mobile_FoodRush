@@ -34,13 +34,6 @@ import com.example.foodrush.ui.theme.OrangePrimary
 import com.example.foodrush.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 
-class Registration : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        // Fallback for old activity entry point
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistrationBody(navController: NavHostController, viewModel: UserViewModel) {
@@ -187,7 +180,9 @@ fun RegistrationBody(navController: NavHostController, viewModel: UserViewModel)
                                     isLoading = false
                                     if (dbSuccess) {
                                         Toast.makeText(context, "Registration Successful", Toast.LENGTH_SHORT).show()
-                                        navController.navigate(Screen.Login.route)
+                                        navController.navigate(Screen.Dashboard.route) {
+                                            popUpTo(Screen.Registration.route) { inclusive = true }
+                                        }
                                     } else {
                                         Toast.makeText(context, dbMsg, Toast.LENGTH_SHORT).show()
                                     }

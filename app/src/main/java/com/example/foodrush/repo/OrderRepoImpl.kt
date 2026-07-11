@@ -21,9 +21,27 @@ class OrderRepoImpl : OrderRepo {
         orderRef.orderByChild("userId").equalTo(userId).addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val list = snapshot.children.mapNotNull { it.getValue(OrderModel::class.java) }
+                    .sortedByDescending { it.timestamp }
                 callback(true, "fetched", list)
             }
             override fun onCancelled(error: DatabaseError) = callback(false, error.message, emptyList())
         })
+    }
+
+    override fun getAllOrders(callback: (Boolean, String, List<OrderModel>) -> Unit) {
+        orderRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val list = snapshot.children.mapNotNull { it.getValue(OrderModel::class.java) }
+                    .sortedByDescending { it.timestamp }
+                callback(true, "fetched", list)
+            }
+            override fun onCancelled(error: DatabaseError) = callback(false, error.message, emptyList())
+        })
+    }
+
+    override fun updateOrderStatus(orderId: String, status: String, callback: (Boolean, String) -> Unit) {
+        orderRef.child(orderId).child("status").setValue(status).addOnCompleteListener {
+            if (it.isSuccessful) callback(true, "Status updated") else callback(false, "${it.exception?.message}")
+        }
     }
 }
