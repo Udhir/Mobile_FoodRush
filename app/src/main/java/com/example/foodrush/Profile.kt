@@ -27,8 +27,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.foodrush.repo.UserRepoImpl
 import com.example.foodrush.ui.theme.OrangePrimary
+import com.example.foodrush.view.AdminOrdersActivity
 import com.example.foodrush.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
+import kotlin.jvm.java
 
 @Composable
 fun ProfileScreen(navController: NavHostController) {
@@ -89,6 +91,11 @@ fun ProfileScreen(navController: NavHostController) {
 
                 ProfileOptionRow(Icons.Default.Add, "Add New Food Item") {
                     navController.navigate(Screen.AddFood.route)
+                }
+
+                // FIXED: Added the Manage Orders button here for Admins!
+                ProfileOptionRow(Icons.Default.ListAlt, "Manage All Orders") {
+                    context.startActivity(Intent(context, AdminOrdersActivity::class.java))
                 }
             }
 

@@ -43,7 +43,6 @@ import java.util.*
 
 @Composable
 fun DashboardBody(navController: NavHostController, viewModel: FoodViewModel) {
-    // Track selected tab (0 = Home, 1 = Cart, 2 = Orders, 3 = Profile)
     var selectedTab by remember { mutableStateOf(0) }
 
     val userViewModel = remember { UserViewModel(UserRepoImpl()) }
@@ -77,17 +76,18 @@ fun DashboardBody(navController: NavHostController, viewModel: FoodViewModel) {
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
             when (selectedTab) {
-                0 -> HomeContent(navController, viewModel, currentUser?.name ?: "Guest")
-                1 -> CartScreen(onCheckout = { selectedTab = 0 })
-                2 -> OrderHistoryTab() // ADDED: New Orders Tab
-                3 -> ProfileScreen(navController) // Shifted Profile to Tab 3
+                0 -> HomeContent(navController, viewModel, currentUser?.name ?: "Guest", currentUser?.isAdmin ?: false)
+                // FIXED: Passing navController to CartScreen
+                1 -> CartScreen(navController = navController, onCheckout = { selectedTab = 0 })
+                2 -> OrderHistoryTab()
+                3 -> ProfileScreen(navController)
             }
         }
     }
 }
 
 @Composable
-fun HomeContent(navController: NavHostController, viewModel: FoodViewModel, userName: String) {
+fun HomeContent(navController: NavHostController, viewModel: FoodViewModel, userName: String, isAdmin: Boolean) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("All") }
 
@@ -222,20 +222,27 @@ fun HomeContent(navController: NavHostController, viewModel: FoodViewModel, user
             modifier = Modifier.fillMaxSize()
         ) {
             items(filteredFoods) { food ->
-                ModernFoodCard(food = food, onClick = {
-                    navController.navigate(Screen.FoodDetail.createRoute(food.id))
-                })
+                ModernFoodCard(
+                    food = food,
+                    isAdmin = isAdmin,
+                    onCardClick = {
+                        navController.navigate(Screen.FoodDetail.createRoute(food.id))
+                    },
+                    onEditClick = {
+                        navController.navigate(Screen.AddFood.createRoute(food.id))
+                    }
+                )
             }
         }
     }
 }
 
 @Composable
-fun ModernFoodCard(food: FoodModel, onClick: () -> Unit) {
+fun ModernFoodCard(food: FoodModel, isAdmin: Boolean, onCardClick: () -> Unit, onEditClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .clickable { onCardClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -262,6 +269,19 @@ fun ModernFoodCard(food: FoodModel, onClick: () -> Unit) {
                     Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFB300), modifier = Modifier.size(14.dp))
                     Text(food.rating.toString(), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 4.dp))
                 }
+
+                if (isAdmin) {
+                    IconButton(
+                        onClick = onEditClick,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                            .size(32.dp)
+                            .background(Color.White.copy(alpha = 0.9f), CircleShape)
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit", tint = OrangePrimary, modifier = Modifier.size(16.dp))
+                    }
+                }
             }
 
             Column(Modifier.padding(12.dp)) {
@@ -269,7 +289,8 @@ fun ModernFoodCard(food: FoodModel, onClick: () -> Unit) {
                 Text(food.category, color = Color.Gray, fontSize = 12.sp)
                 Spacer(Modifier.height(8.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("$${"%.2f".format(food.price)}", color = OrangePrimary, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                    // FIXED: Changed to NPR
+                    Text("NPR ${"%.2f".format(food.price)}", color = OrangePrimary, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
                     Box(
                         modifier = Modifier
                             .size(28.dp)
@@ -285,9 +306,6 @@ fun ModernFoodCard(food: FoodModel, onClick: () -> Unit) {
     }
 }
 
-// ------------------------------------------
-// ADDED: The New Order History Tab Component
-// ------------------------------------------
 @Composable
 fun OrderHistoryTab() {
     val orderViewModel = remember { OrderViewModel(OrderRepoImpl()) }
@@ -310,12 +328,13 @@ fun OrderHistoryTab() {
             "My Orders",
             modifier = Modifier.padding(top = 40.dp, start = 20.dp, end = 20.dp, bottom = 10.dp),
             fontWeight = FontWeight.ExtraBold,
-            fontSize = 24.sp
+            fontSize = 24.sp,
+            color = Color.Black
         )
 
         if (orders.isEmpty()) {
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text("You have no orders yet.", color = Color.Gray)
+                Text("You have no orders yet.", color = OrangePrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
         } else {
             LazyColumn(
@@ -345,20 +364,21 @@ fun OrderHistoryCard(order: OrderModel) {
     ) {
         Column(Modifier.padding(14.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Order #${order.orderId.takeLast(6)}", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text("Order #${order.orderId.takeLast(6)}", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
                 StatusBadge(order.status)
             }
             Spacer(Modifier.height(4.dp))
-            Text(dateStr, fontSize = 12.sp, color = Color.Gray)
+            Text(dateStr, fontSize = 12.sp, color = OrangePrimary, fontWeight = FontWeight.Bold)
 
             Spacer(Modifier.height(8.dp))
 
             order.items.forEach {
-                Text("${it.quantity} x ${it.foodName}", fontSize = 14.sp, color = Color.DarkGray)
+                Text("${it.quantity} x ${it.foodName}", fontSize = 14.sp, color = Color.Black, fontWeight = FontWeight.Medium)
             }
 
             Spacer(Modifier.height(8.dp))
-            Text("Total: $${"%.2f".format(order.totalPrice)}", fontWeight = FontWeight.ExtraBold, color = OrangePrimary, fontSize = 16.sp)
+            // FIXED: Changed to NPR
+            Text("Total: NPR ${"%.2f".format(order.totalPrice)}", fontWeight = FontWeight.ExtraBold, color = OrangePrimary, fontSize = 16.sp)
         }
     }
 }
@@ -382,9 +402,6 @@ fun StatusBadge(status: String) {
     }
 }
 
-// ------------------------------------------
-// UPDATED: Bottom Navigation Bar with 4 Tabs
-// ------------------------------------------
 @Composable
 fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
     NavigationBar(
@@ -405,7 +422,6 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
             onClick = { onTabSelected(1) },
             colors = NavigationBarItemDefaults.colors(selectedIconColor = OrangePrimary, selectedTextColor = OrangePrimary, indicatorColor = OrangePrimary.copy(alpha = 0.1f))
         )
-        // ADDED: Orders Tab (Index 2)
         NavigationBarItem(
             icon = { Icon(Icons.Default.ListAlt, contentDescription = null) },
             label = { Text("Orders") },
@@ -413,7 +429,6 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
             onClick = { onTabSelected(2) },
             colors = NavigationBarItemDefaults.colors(selectedIconColor = OrangePrimary, selectedTextColor = OrangePrimary, indicatorColor = OrangePrimary.copy(alpha = 0.1f))
         )
-        // SHIFTED: Profile Tab (Index 3)
         NavigationBarItem(
             icon = { Icon(Icons.Default.Person, contentDescription = null) },
             label = { Text("Profile") },

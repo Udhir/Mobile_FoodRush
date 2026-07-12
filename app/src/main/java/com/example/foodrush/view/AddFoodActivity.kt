@@ -7,7 +7,6 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -48,7 +47,6 @@ import com.example.foodrush.viewmodel.ImageViewModel
 class AddFoodActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             FoodRushTheme {
                 AddFoodScreen(
@@ -84,11 +82,12 @@ fun AddFoodScreen(
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var existingImageUrl by remember { mutableStateOf<String?>(null) }
     var isUploading by remember { mutableStateOf(false) }
-    var isEditMode by remember { mutableStateOf(false) }
+
+    // FIXED: Directly check if we are in Edit Mode instantly
+    val isEditMode = foodId != null
 
     LaunchedEffect(foodId) {
         if (foodId != null) {
-            isEditMode = true
             foodViewModel.repo.getFoodById(foodId) { success, _, food ->
                 if (success && food != null) {
                     name = food.name
@@ -106,12 +105,11 @@ fun AddFoodScreen(
         onResult = { uri -> imageUri = uri }
     )
 
-    // ADDED: Common style for all input fields to make them easily visible
     val inputFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedContainerColor = Color(0xFFF5F5F5), // Light Gray Background
-        unfocusedContainerColor = Color(0xFFF5F5F5), // Light Gray Background
-        focusedBorderColor = OrangePrimary, // Turns orange when clicked
-        unfocusedBorderColor = Color(0xFFE0E0E0), // Soft visible border when not clicked
+        focusedContainerColor = Color(0xFFF5F5F5),
+        unfocusedContainerColor = Color(0xFFF5F5F5),
+        focusedBorderColor = OrangePrimary,
+        unfocusedBorderColor = Color(0xFFE0E0E0),
         focusedTextColor = Color.Black,
         unfocusedTextColor = Color.Black,
         focusedLabelColor = OrangePrimary,
@@ -124,44 +122,28 @@ fun AddFoodScreen(
             .background(OrangePrimary)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onClose) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
-                    }
-                    Text(
-                        text = if (isEditMode) "Edit Food" else "Add New Food",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.White,
-                        modifier = Modifier.padding(start = 10.dp)
+                IconButton(onClick = onClose) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White
                     )
                 }
-
-                if (isEditMode) {
-                    IconButton(onClick = {
-                        foodId?.let {
-                            foodViewModel.deleteFood(it) { success, msg ->
-                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                                if (success) onClose()
-                            }
-                        }
-                    }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.White)
-                    }
-                }
+                Text(
+                    text = if (isEditMode) "Edit Food" else "Add New Food",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White,
+                    modifier = Modifier.padding(start = 10.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -172,9 +154,8 @@ fun AddFoodScreen(
                 shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp)
             ) {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(25.dp),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(25.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     item {
@@ -225,7 +206,7 @@ fun AddFoodScreen(
                             label = { Text("Food Name") },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
-                            colors = inputFieldColors // ADDED
+                            colors = inputFieldColors
                         )
 
                         Spacer(modifier = Modifier.height(15.dp))
@@ -236,7 +217,7 @@ fun AddFoodScreen(
                             label = { Text("Description") },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
-                            colors = inputFieldColors // ADDED
+                            colors = inputFieldColors
                         )
 
                         Spacer(modifier = Modifier.height(15.dp))
@@ -248,7 +229,7 @@ fun AddFoodScreen(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
-                            colors = inputFieldColors // ADDED
+                            colors = inputFieldColors
                         )
 
                         Spacer(modifier = Modifier.height(15.dp))
@@ -259,7 +240,7 @@ fun AddFoodScreen(
                             label = { Text("Category (e.g., Burger, Pizza)") },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
-                            colors = inputFieldColors // ADDED
+                            colors = inputFieldColors
                         )
 
                         Spacer(modifier = Modifier.height(40.dp))
@@ -335,19 +316,38 @@ fun AddFoodScreen(
                                 Text(if (isEditMode) "UPDATE FOOD ITEM" else "ADD FOOD ITEM", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                             }
                         }
+
+                        // ==========================================
+                        // FIXED: MASSIVE RED DELETE BUTTON AT BOTTOM
+                        // ==========================================
+                        if (isEditMode) {
+                            Spacer(modifier = Modifier.height(15.dp))
+
+                            Button(
+                                onClick = {
+                                    foodId?.let {
+                                        foodViewModel.deleteFood(it) { success, msg ->
+                                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                            if (success) onClose()
+                                        }
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(55.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)), // Bold Red Color
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.White)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("DELETE FOOD ITEM", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
                     }
                 }
             }
         }
-    }
-}
-
-@Preview
-@Composable
-fun AddFoodScreenPreview() {
-    FoodRushTheme {
-        AddFoodScreen(
-            onClose = {}
-        )
     }
 }

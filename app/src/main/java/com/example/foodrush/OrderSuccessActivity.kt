@@ -72,7 +72,7 @@ fun OrderSuccessScreen() {
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Your delicious food is on the way. You can track your order in the history tab.",
+            text = "Your delicious food is on the way. You can track your order in the Orders tab.",
             fontSize = 16.sp,
             color = Color.Gray,
             modifier = Modifier.padding(horizontal = 20.dp),
@@ -83,7 +83,9 @@ fun OrderSuccessScreen() {
 
         Button(
             onClick = {
-                val intent = Intent(context, Screen.Dashboard::class.java)
+                // FIXED: Navigates back to MainActivity (which holds your Dashboard)
+                // and completely clears the "Buy Now" and "Checkout" pages from history!
+                val intent = Intent(context, MainActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 context.startActivity(intent)
             },
@@ -93,7 +95,7 @@ fun OrderSuccessScreen() {
             colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text("BACK TO HOME", fontWeight = FontWeight.Bold)
+            Text("BACK TO HOME", fontWeight = FontWeight.Bold, color = Color.White)
         }
     }
 }

@@ -1,6 +1,5 @@
 package com.example.foodrush
 
-import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -22,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.foodrush.model.CartModel
 import com.example.foodrush.model.FoodModel
@@ -32,7 +32,7 @@ import com.example.foodrush.viewmodel.FoodViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun FoodDetailScreen(foodId: String, foodViewModel: FoodViewModel, onBack: () -> Unit) {
+fun FoodDetailScreen(foodId: String, foodViewModel: FoodViewModel, navController: NavHostController, onBack: () -> Unit) {
     val context = LocalContext.current
     val cartViewModel = remember { CartViewModel(CartRepoImpl()) }
     var food by remember { mutableStateOf<FoodModel?>(null) }
@@ -77,7 +77,8 @@ fun FoodDetailScreen(foodId: String, foodViewModel: FoodViewModel, onBack: () ->
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(item.name, fontWeight = FontWeight.Bold, fontSize = 24.sp)
-                    Text("$${item.price}", fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, color = OrangePrimary)
+                    // Currency localized to NPR
+                    Text("NPR ${item.price}", fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, color = OrangePrimary)
                 }
 
                 Spacer(Modifier.height(10.dp))
@@ -122,6 +123,7 @@ fun FoodDetailScreen(foodId: String, foodViewModel: FoodViewModel, onBack: () ->
 
                 Spacer(Modifier.height(40.dp))
 
+                // ... inside FoodDetailScreen.kt, in the Button onClick ...
                 Button(
                     onClick = {
                         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
@@ -139,19 +141,20 @@ fun FoodDetailScreen(foodId: String, foodViewModel: FoodViewModel, onBack: () ->
                         )
                         cartViewModel.addToCart(cartItem) { success, msg ->
                             if (success) {
-                                // ADDED: Directly open the Checkout Screen!
-                                val intent = Intent(context, CheckoutActivity::class.java)
-                                context.startActivity(intent)
+                                // FIXED: Only show Toast, NO navigation
+                                Toast.makeText(context, "Added to cart!", Toast.LENGTH_SHORT).show()
                             } else {
                                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                             }
                         }
                     },
+                    // ... (rest of button code)
+
                     modifier = Modifier.fillMaxWidth().height(55.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
                     shape = RoundedCornerShape(15.dp)
                 ) {
-                    Text("Buy Now", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("ADD TO CART", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }

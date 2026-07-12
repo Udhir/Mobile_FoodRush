@@ -27,6 +27,7 @@ sealed class Screen(val route: String) {
     object Cart : Screen("cart")
     object Profile : Screen("profile")
     object AdminFoodList : Screen("admin_food_list")
+
     object AddFood : Screen("add_food?foodId={foodId}") {
         fun createRoute(foodId: String? = null) = if (foodId != null) "add_food?foodId=$foodId" else "add_food"
     }
@@ -35,7 +36,6 @@ sealed class Screen(val route: String) {
 @Composable
 fun AppNavigation(
     navController: NavHostController = rememberNavController(),
-    // Start from login if not authenticated, splash is now a separate activity
     startDestination: String = if (FirebaseAuth.getInstance().currentUser != null) Screen.Dashboard.route else Screen.Login.route
 ) {
     val foodViewModel = remember { FoodViewModel(FoodRepoImpl()) }
@@ -62,48 +62,54 @@ fun AppNavigation(
             arguments = listOf(navArgument("foodId") { type = NavType.StringType })
         ) { backStackEntry ->
             val foodId = backStackEntry.arguments?.getString("foodId") ?: ""
-            FoodDetailScreen(foodId, foodViewModel) {
-                navController.popBackStack()
-            }
+            FoodDetailScreen(
+                foodId = foodId,
+                foodViewModel = foodViewModel,
+                navController = navController,
+                onBack = { navController.popBackStack() }
+            )
         }
+
+        // FIXED: Passing the navController here!
         composable(Screen.Cart.route) {
-            CartScreen {
-                navController.popBackStack()
-            }
+            CartScreen(
+                navController = navController,
+                onCheckout = { navController.popBackStack() }
+            )
         }
-        composable(Screen.AdminFoodList.route) {
-            // AdminFoodListScreen(navController, foodViewModel)
-        }
+
+        composable(Screen.AdminFoodList.route) { }
+
         composable(
             Screen.AddFood.route,
-            arguments = listOf(navArgument("foodId") { 
+            arguments = listOf(navArgument("foodId") {
                 type = NavType.StringType
                 nullable = true
                 defaultValue = null
             })
         ) { backStackEntry ->
             val foodId = backStackEntry.arguments?.getString("foodId")
-            AddFoodScreen(onClose = { navController.popBackStack() })
+            AddFoodScreen(
+                foodId = foodId,
+                onClose = { navController.popBackStack() }
+            )
         }
     }
 }
 
-// Wrapper Composables to bridge with existing logic or newly created ones
+// Wrapper Composables
 @Composable
 fun DashboardScreen(navController: NavHostController, viewModel: FoodViewModel) {
     DashboardBody(navController, viewModel)
 }
-
 @Composable
 fun SplashScreen(navController: NavHostController) {
     Splash(navController)
 }
-
 @Composable
 fun LoginScreen(navController: NavHostController, viewModel: UserViewModel) {
     LoginBody(navController, viewModel)
 }
-
 @Composable
 fun RegistrationScreen(navController: NavHostController, viewModel: UserViewModel) {
     RegistrationBody(navController, viewModel)
