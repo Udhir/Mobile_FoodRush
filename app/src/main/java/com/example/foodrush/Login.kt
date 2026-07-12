@@ -33,7 +33,7 @@ import com.example.foodrush.repo.UserRepoImpl
 import com.example.foodrush.ui.theme.FoodRushTheme
 import com.example.foodrush.ui.theme.OrangePrimary
 import com.example.foodrush.viewmodel.UserViewModel
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginBody(navController: NavHostController, viewModel: UserViewModel) {
     var email by remember { mutableStateOf("") }
@@ -42,6 +42,19 @@ fun LoginBody(navController: NavHostController, viewModel: UserViewModel) {
     var isLoading by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+
+    // ADDED: The solid, visible text field style from AddFoodActivity
+    val inputFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = Color(0xFFF5F5F5),
+        unfocusedContainerColor = Color(0xFFF5F5F5),
+        focusedBorderColor = OrangePrimary,
+        unfocusedBorderColor = Color(0xFFE0E0E0),
+        focusedTextColor = Color.Black,
+        unfocusedTextColor = Color.Black,
+        focusedLabelColor = OrangePrimary,
+        unfocusedLabelColor = Color.Gray,
+        cursorColor = OrangePrimary
+    )
 
     Column(modifier = Modifier.fillMaxSize().background(OrangePrimary)) {
         // Header
@@ -59,7 +72,6 @@ fun LoginBody(navController: NavHostController, viewModel: UserViewModel) {
             color = Color.White,
             shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp)
         ) {
-
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(30.dp)
@@ -74,12 +86,12 @@ fun LoginBody(navController: NavHostController, viewModel: UserViewModel) {
                         value = email,
                         onValueChange = { email = it },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Email", color = Color.Gray) },
+                        label = { Text("Email") },
                         shape = RoundedCornerShape(12.dp),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                         trailingIcon = { Icon(painterResource(R.drawable.baseline_email_24), contentDescription = null, tint = Color.Gray) },
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary)
+                        colors = inputFieldColors // APPLIED COLORS HERE
                     )
 
                     Spacer(Modifier.height(15.dp))
@@ -88,7 +100,7 @@ fun LoginBody(navController: NavHostController, viewModel: UserViewModel) {
                         value = password,
                         onValueChange = { password = it },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Password", color = Color.Gray) },
+                        label = { Text("Password") },
                         shape = RoundedCornerShape(12.dp),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
@@ -98,7 +110,7 @@ fun LoginBody(navController: NavHostController, viewModel: UserViewModel) {
                                 Icon(painterResource(if (visibility) R.drawable.baseline_visibility_24 else R.drawable.outline_visibility_off_24), contentDescription = null, tint = Color.Gray)
                             }
                         },
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary)
+                        colors = inputFieldColors // APPLIED COLORS HERE
                     )
 
                     Text(
@@ -162,7 +174,6 @@ fun LoginBody(navController: NavHostController, viewModel: UserViewModel) {
         }
     }
 }
-
 
 @Composable
 @Preview(showBackground = true)

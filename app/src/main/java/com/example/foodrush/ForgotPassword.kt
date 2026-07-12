@@ -29,11 +29,25 @@ import com.example.foodrush.repo.UserRepoImpl
 import com.example.foodrush.ui.theme.FoodRushTheme
 import com.example.foodrush.ui.theme.OrangePrimary
 import com.example.foodrush.viewmodel.UserViewModel
-@OptIn(ExperimentalMaterial3Api::class)
+
+
 @Composable
 fun ForgotPasswordScreen(navController: NavHostController, userViewModel: UserViewModel) {
     var email by remember { mutableStateOf("") }
     val context = LocalContext.current
+
+    // ADDED: The solid, visible text field style
+    val inputFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = Color(0xFFF5F5F5),
+        unfocusedContainerColor = Color(0xFFF5F5F5),
+        focusedBorderColor = OrangePrimary,
+        unfocusedBorderColor = Color(0xFFE0E0E0),
+        focusedTextColor = Color.Black,
+        unfocusedTextColor = Color.Black,
+        focusedLabelColor = OrangePrimary,
+        unfocusedLabelColor = Color.Gray,
+        cursorColor = OrangePrimary
+    )
 
     Column(modifier = Modifier.fillMaxSize().background(OrangePrimary)) {
         Column(
@@ -49,7 +63,6 @@ fun ForgotPasswordScreen(navController: NavHostController, userViewModel: UserVi
             color = Color.White,
             shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp)
         ) {
-
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(30.dp)
@@ -68,11 +81,11 @@ fun ForgotPasswordScreen(navController: NavHostController, userViewModel: UserVi
                         value = email,
                         onValueChange = { email = it },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Email Address", color = Color.Gray) },
+                        label = { Text("Email Address") },
                         shape = RoundedCornerShape(12.dp),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Done),
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary)
+                        colors = inputFieldColors // APPLIED COLORS HERE
                     )
 
                     Spacer(Modifier.height(40.dp))

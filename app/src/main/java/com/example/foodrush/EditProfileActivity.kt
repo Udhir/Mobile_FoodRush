@@ -39,36 +39,47 @@ class EditProfileActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(onBack: () -> Unit) {
     val userViewModel = remember { UserViewModel(UserRepoImpl()) }
     val context = LocalContext.current
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
-    // Fetch the user data from Firebase
     LaunchedEffect(Unit) {
         userViewModel.getUserById(userId)
     }
 
     val user by userViewModel.users.observeAsState(null)
-
     var name by remember { mutableStateOf("") }
     var isUpdating by remember { mutableStateOf(false) }
 
-    // Once user data loads, populate the text field
     LaunchedEffect(user) {
         user?.let { name = it.name }
     }
+
+    // ADDED: The solid, visible text field style for BOTH active and disabled fields
+    val inputFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = Color(0xFFF5F5F5),
+        unfocusedContainerColor = Color(0xFFF5F5F5),
+        disabledContainerColor = Color(0xFFF5F5F5), // Keeps background solid when disabled
+        focusedBorderColor = OrangePrimary,
+        unfocusedBorderColor = Color(0xFFE0E0E0),
+        disabledBorderColor = Color(0xFFE0E0E0), // Visible border when disabled
+        focusedTextColor = Color.Black,
+        unfocusedTextColor = Color.Black,
+        disabledTextColor = Color.Gray, // Gray text for disabled email
+        focusedLabelColor = OrangePrimary,
+        unfocusedLabelColor = Color.Gray,
+        disabledLabelColor = Color.Gray,
+        cursorColor = OrangePrimary
+    )
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF8F9FA))
             .systemBarsPadding()
-            .imePadding() // Pushes the UI up when keyboard opens
     ) {
-        // Orange Header Bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -80,15 +91,9 @@ fun EditProfileScreen(onBack: () -> Unit) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
             }
             Spacer(Modifier.width(8.dp))
-            Text(
-                text = "Edit Profile",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+            Text(text = "Edit Profile", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
         }
 
-        // Form Content
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -100,33 +105,23 @@ fun EditProfileScreen(onBack: () -> Unit) {
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Full Name", color = Color.Gray) },
+                label = { Text("Full Name") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = OrangePrimary,
-                    cursorColor = OrangePrimary,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-                )
+                colors = inputFieldColors // APPLIED COLORS HERE
             )
 
             Spacer(Modifier.height(15.dp))
 
-            // Email is disabled because changing email in Firebase requires a special Re-Auth flow
             OutlinedTextField(
                 value = user?.email ?: "Loading...",
                 onValueChange = {},
                 label = { Text("Email Address") },
-                enabled = false,
+                enabled = false, // Cannot change email without Re-Auth
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    disabledTextColor = Color.Gray,
-                    disabledBorderColor = Color.LightGray,
-                    disabledLabelColor = Color.Gray
-                )
+                colors = inputFieldColors // APPLIED COLORS HERE
             )
 
             Spacer(Modifier.height(40.dp))
@@ -137,10 +132,7 @@ fun EditProfileScreen(onBack: () -> Unit) {
                         Toast.makeText(context, "Name cannot be empty", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
-
                     isUpdating = true
-
-                    // Create updated user model, making sure to preserve their password and Admin status!
                     val updatedUser = UserModel(
                         id = userId,
                         name = name,
@@ -152,15 +144,11 @@ fun EditProfileScreen(onBack: () -> Unit) {
                     userViewModel.editProfile(userId, updatedUser) { success, msg ->
                         isUpdating = false
                         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                        if (success) {
-                            onBack() // Go back to profile screen on success
-                        }
+                        if (success) onBack()
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
-                enabled = !isUpdating && user != null, // Button disabled until user data loads
+                modifier = Modifier.fillMaxWidth().height(55.dp),
+                enabled = !isUpdating && user != null,
                 colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
                 shape = RoundedCornerShape(12.dp)
             ) {
