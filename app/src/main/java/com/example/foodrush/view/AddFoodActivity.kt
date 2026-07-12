@@ -106,6 +106,18 @@ fun AddFoodScreen(
         onResult = { uri -> imageUri = uri }
     )
 
+    // ADDED: Common style for all input fields to make them easily visible
+    val inputFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = Color(0xFFF5F5F5), // Light Gray Background
+        unfocusedContainerColor = Color(0xFFF5F5F5), // Light Gray Background
+        focusedBorderColor = OrangePrimary, // Turns orange when clicked
+        unfocusedBorderColor = Color(0xFFE0E0E0), // Soft visible border when not clicked
+        focusedTextColor = Color.Black,
+        unfocusedTextColor = Color.Black,
+        focusedLabelColor = OrangePrimary,
+        unfocusedLabelColor = Color.Gray
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -212,7 +224,8 @@ fun AddFoodScreen(
                             onValueChange = { name = it },
                             label = { Text("Food Name") },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(12.dp),
+                            colors = inputFieldColors // ADDED
                         )
 
                         Spacer(modifier = Modifier.height(15.dp))
@@ -222,7 +235,8 @@ fun AddFoodScreen(
                             onValueChange = { description = it },
                             label = { Text("Description") },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(12.dp),
+                            colors = inputFieldColors // ADDED
                         )
 
                         Spacer(modifier = Modifier.height(15.dp))
@@ -233,7 +247,8 @@ fun AddFoodScreen(
                             label = { Text("Price ($)") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(12.dp),
+                            colors = inputFieldColors // ADDED
                         )
 
                         Spacer(modifier = Modifier.height(15.dp))
@@ -243,7 +258,8 @@ fun AddFoodScreen(
                             onValueChange = { category = it },
                             label = { Text("Category (e.g., Burger, Pizza)") },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(12.dp),
+                            colors = inputFieldColors // ADDED
                         )
 
                         Spacer(modifier = Modifier.height(40.dp))

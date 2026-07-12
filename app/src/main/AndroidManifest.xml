@@ -19,6 +19,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FoodRush"
         tools:replace="android:fullBackupContent">
+
         <activity
             android:name=".SplashBody"
             android:exported="true"
@@ -34,18 +35,51 @@
             android:name=".MainActivity"
             android:exported="false"
             android:theme="@style/Theme.FoodRush" />
+
+        <!-- FIXED: Added CheckoutActivity so the app doesn't crash when paying -->
+        <activity
+            android:name=".CheckoutActivity"
+            android:exported="false"
+            android:theme="@style/Theme.FoodRush"
+            android:windowSoftInputMode="adjustResize" />
+
         <activity
             android:name=".view.AddFoodActivity"
             android:exported="false"
             android:label="@string/title_activity_add_food"
             android:theme="@style/Theme.FoodRush"
             android:windowSoftInputMode="adjustResize" />
+
         <activity
             android:name=".EditProfileActivity"
             android:exported="false"
             android:label="@string/title_activity_edit_profile"
             android:theme="@style/Theme.FoodRush"
             android:windowSoftInputMode="adjustResize" />
+
+        <!-- FIXED: Renamed to AdminOrdersActivity (with an 's') to match your Kotlin file -->
+        <activity
+            android:name=".view.AdminOrdersActivity"
+            android:exported="false"
+            android:label="@string/title_activity_admin_order"
+            android:theme="@style/Theme.FoodRush"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".view.OrderHistoryActivity"
+            android:exported="false"
+            android:label="@string/title_activity_order_history"
+            android:theme="@style/Theme.FoodRush"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- FIXED: Removed '.view' because OrderSuccessActivity is in your root folder -->
+        <activity
+            android:name=".OrderSuccessActivity"
+            android:exported="false"
+            android:label="@string/title_activity_order_success"
+            android:theme="@style/Theme.FoodRush"
+            android:windowSoftInputMode="adjustResize" />
+
     </application>
 
 </manifest>
