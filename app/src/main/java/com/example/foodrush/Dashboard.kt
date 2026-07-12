@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -29,18 +30,22 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.foodrush.model.FoodModel
+import com.example.foodrush.model.OrderModel
+import com.example.foodrush.repo.OrderRepoImpl
 import com.example.foodrush.repo.UserRepoImpl
 import com.example.foodrush.ui.theme.OrangePrimary
 import com.example.foodrush.viewmodel.FoodViewModel
+import com.example.foodrush.viewmodel.OrderViewModel
 import com.example.foodrush.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
 fun DashboardBody(navController: NavHostController, viewModel: FoodViewModel) {
-    // Track selected tab (0 = Home, 1 = Cart, 2 = Profile)
+    // Track selected tab (0 = Home, 1 = Cart, 2 = Orders, 3 = Profile)
     var selectedTab by remember { mutableStateOf(0) }
 
-    // Fetch User to check Admin Status
     val userViewModel = remember { UserViewModel(UserRepoImpl()) }
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
@@ -58,7 +63,6 @@ fun DashboardBody(navController: NavHostController, viewModel: FoodViewModel) {
             )
         },
         floatingActionButton = {
-            // SECURITY: Only show the Add Food FAB if the user is an ADMIN
             if (selectedTab == 0 && currentUser?.isAdmin == true) {
                 FloatingActionButton(
                     onClick = { navController.navigate(Screen.AddFood.route) },
@@ -72,11 +76,11 @@ fun DashboardBody(navController: NavHostController, viewModel: FoodViewModel) {
         }
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
-            // Switch screens dynamically inside the main Scaffold
             when (selectedTab) {
                 0 -> HomeContent(navController, viewModel, currentUser?.name ?: "Guest")
                 1 -> CartScreen(onCheckout = { selectedTab = 0 })
-                2 -> ProfileScreen(navController)
+                2 -> OrderHistoryTab() // ADDED: New Orders Tab
+                3 -> ProfileScreen(navController) // Shifted Profile to Tab 3
             }
         }
     }
@@ -96,7 +100,6 @@ fun HomeContent(navController: NavHostController, viewModel: FoodViewModel, user
         viewModel.getAllCategories()
     }
 
-    // Filter Logic based on Search and Category selection
     val filteredFoods = foods.filter { food ->
         val matchesSearch = if (searchQuery.isBlank()) true else food.name.contains(searchQuery, ignoreCase = true)
         val matchesCategory = if (selectedCategory == "All") true else food.category == selectedCategory
@@ -108,7 +111,6 @@ fun HomeContent(navController: NavHostController, viewModel: FoodViewModel, user
             .fillMaxSize()
             .background(Color(0xFFF8F9FA))
     ) {
-        // Welcome Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -131,7 +133,6 @@ fun HomeContent(navController: NavHostController, viewModel: FoodViewModel, user
             }
         }
 
-        // Search Bar
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
@@ -150,7 +151,6 @@ fun HomeContent(navController: NavHostController, viewModel: FoodViewModel, user
             singleLine = true
         )
 
-        // Horizontal Category Scrolling
         val displayCategories = listOf("All") + categories.map { it.name }
         LazyRow(
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
@@ -175,7 +175,6 @@ fun HomeContent(navController: NavHostController, viewModel: FoodViewModel, user
             }
         }
 
-        // Beautiful Promo Banner
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -193,7 +192,7 @@ fun HomeContent(navController: NavHostController, viewModel: FoodViewModel, user
                     Text("Get 50% OFF\non your first order", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
                 }
                 Image(
-                    painter = painterResource(R.drawable.burger), // Make sure you have this image in your drawable folder!
+                    painter = painterResource(R.drawable.burger),
                     contentDescription = null,
                     modifier = Modifier.size(100.dp),
                     contentScale = ContentScale.Fit
@@ -215,7 +214,6 @@ fun HomeContent(navController: NavHostController, viewModel: FoodViewModel, user
             }
         }
 
-        // Display Firebase Foods in a 2-Column Grid
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 20.dp),
@@ -244,16 +242,14 @@ fun ModernFoodCard(food: FoodModel, onClick: () -> Unit) {
     ) {
         Column {
             Box(modifier = Modifier.fillMaxWidth().height(120.dp)) {
-                // AsyncImage automatically handles the Firebase Storage URL!
                 AsyncImage(
                     model = food.imageUrl,
                     contentDescription = food.name,
                     contentScale = ContentScale.Crop,
-                    placeholder = painterResource(R.drawable.burger), // Shows while loading
-                    error = painterResource(R.drawable.burger),       // Shows if Firebase link breaks
+                    placeholder = painterResource(R.drawable.burger),
+                    error = painterResource(R.drawable.burger),
                     modifier = Modifier.fillMaxSize().background(Color(0xFFEEEEEE))
                 )
-                // Floating Rating Pill
                 Row(
                     modifier = Modifier
                         .padding(8.dp)
@@ -274,7 +270,6 @@ fun ModernFoodCard(food: FoodModel, onClick: () -> Unit) {
                 Spacer(Modifier.height(8.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("$${"%.2f".format(food.price)}", color = OrangePrimary, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
-                    // Mini Quick-Add Button (Decorative for now, leads to details screen)
                     Box(
                         modifier = Modifier
                             .size(28.dp)
@@ -290,6 +285,106 @@ fun ModernFoodCard(food: FoodModel, onClick: () -> Unit) {
     }
 }
 
+// ------------------------------------------
+// ADDED: The New Order History Tab Component
+// ------------------------------------------
+@Composable
+fun OrderHistoryTab() {
+    val orderViewModel = remember { OrderViewModel(OrderRepoImpl()) }
+    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
+    LaunchedEffect(Unit) {
+        if (userId.isNotEmpty()) {
+            orderViewModel.getOrders(userId)
+        }
+    }
+
+    val orders by orderViewModel.orders.observeAsState(emptyList())
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8F9FA))
+    ) {
+        Text(
+            "My Orders",
+            modifier = Modifier.padding(top = 40.dp, start = 20.dp, end = 20.dp, bottom = 10.dp),
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 24.sp
+        )
+
+        if (orders.isEmpty()) {
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Text("You have no orders yet.", color = Color.Gray)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(orders) { order ->
+                    OrderHistoryCard(order)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun OrderHistoryCard(order: OrderModel) {
+    val dateStr = remember(order.timestamp) {
+        SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()).format(Date(order.timestamp))
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        Column(Modifier.padding(14.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("Order #${order.orderId.takeLast(6)}", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                StatusBadge(order.status)
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(dateStr, fontSize = 12.sp, color = Color.Gray)
+
+            Spacer(Modifier.height(8.dp))
+
+            order.items.forEach {
+                Text("${it.quantity} x ${it.foodName}", fontSize = 14.sp, color = Color.DarkGray)
+            }
+
+            Spacer(Modifier.height(8.dp))
+            Text("Total: $${"%.2f".format(order.totalPrice)}", fontWeight = FontWeight.ExtraBold, color = OrangePrimary, fontSize = 16.sp)
+        }
+    }
+}
+
+@Composable
+fun StatusBadge(status: String) {
+    val color = when (status) {
+        "Delivered" -> Color(0xFF4CAF50)
+        "Cancelled" -> Color(0xFFF44336)
+        "OnTheWay" -> Color(0xFF2196F3)
+        else -> Color(0xFFFF9800)
+    }
+    Surface(shape = RoundedCornerShape(20.dp), color = color.copy(alpha = 0.15f)) {
+        Text(
+            text = status,
+            color = color,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+        )
+    }
+}
+
+// ------------------------------------------
+// UPDATED: Bottom Navigation Bar with 4 Tabs
+// ------------------------------------------
 @Composable
 fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
     NavigationBar(
@@ -297,24 +392,33 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
         tonalElevation = 8.dp
     ) {
         NavigationBarItem(
-            icon = { Icon(if (selectedTab == 0) Icons.Default.Home else Icons.Default.Home, contentDescription = null) },
+            icon = { Icon(Icons.Default.Home, contentDescription = null) },
             label = { Text("Home") },
             selected = selectedTab == 0,
             onClick = { onTabSelected(0) },
             colors = NavigationBarItemDefaults.colors(selectedIconColor = OrangePrimary, selectedTextColor = OrangePrimary, indicatorColor = OrangePrimary.copy(alpha = 0.1f))
         )
         NavigationBarItem(
-            icon = { Icon(if (selectedTab == 1) Icons.Default.ShoppingCart else Icons.Default.ShoppingCart, contentDescription = null) },
+            icon = { Icon(Icons.Default.ShoppingCart, contentDescription = null) },
             label = { Text("Cart") },
             selected = selectedTab == 1,
             onClick = { onTabSelected(1) },
             colors = NavigationBarItemDefaults.colors(selectedIconColor = OrangePrimary, selectedTextColor = OrangePrimary, indicatorColor = OrangePrimary.copy(alpha = 0.1f))
         )
+        // ADDED: Orders Tab (Index 2)
         NavigationBarItem(
-            icon = { Icon(if (selectedTab == 2) Icons.Default.Person else Icons.Default.PersonOutline, contentDescription = null) },
-            label = { Text("Profile") },
+            icon = { Icon(Icons.Default.ListAlt, contentDescription = null) },
+            label = { Text("Orders") },
             selected = selectedTab == 2,
             onClick = { onTabSelected(2) },
+            colors = NavigationBarItemDefaults.colors(selectedIconColor = OrangePrimary, selectedTextColor = OrangePrimary, indicatorColor = OrangePrimary.copy(alpha = 0.1f))
+        )
+        // SHIFTED: Profile Tab (Index 3)
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Person, contentDescription = null) },
+            label = { Text("Profile") },
+            selected = selectedTab == 3,
+            onClick = { onTabSelected(3) },
             colors = NavigationBarItemDefaults.colors(selectedIconColor = OrangePrimary, selectedTextColor = OrangePrimary, indicatorColor = OrangePrimary.copy(alpha = 0.1f))
         )
     }

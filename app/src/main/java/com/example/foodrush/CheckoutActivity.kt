@@ -50,7 +50,7 @@ fun CheckoutScreen(onBack: () -> Unit) {
     val orderViewModel = remember { OrderViewModel(OrderRepoImpl()) }
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
     val cartItems by cartViewModel.cartItems.observeAsState(emptyList())
-    
+
     var address by remember { mutableStateOf("") }
     var isPlacingOrder by remember { mutableStateOf(false) }
 
@@ -61,6 +61,18 @@ fun CheckoutScreen(onBack: () -> Unit) {
     }
 
     val totalPrice = cartItems.sumOf { it.foodPrice * it.quantity }
+
+    // ADDED: Common style for input field visibility!
+    val inputFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = Color(0xFFF5F5F5), // Light Gray Background
+        unfocusedContainerColor = Color(0xFFF5F5F5), // Light Gray Background
+        focusedBorderColor = OrangePrimary,
+        unfocusedBorderColor = Color(0xFFE0E0E0), // Soft visible border
+        focusedTextColor = Color.Black,
+        unfocusedTextColor = Color.Black,
+        focusedLabelColor = OrangePrimary,
+        unfocusedLabelColor = Color.Gray
+    )
 
     Scaffold(
         topBar = {
@@ -84,18 +96,21 @@ fun CheckoutScreen(onBack: () -> Unit) {
         ) {
             Text("Shipping Address", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Spacer(modifier = Modifier.height(10.dp))
+
+            // APPLIED THE COLORS HERE
             OutlinedTextField(
                 value = address,
                 onValueChange = { address = it },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("Enter your delivery address") },
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = inputFieldColors
             )
 
             Spacer(modifier = Modifier.height(30.dp))
             Text("Order Summary", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Spacer(modifier = Modifier.height(10.dp))
-            
+
             cartItems.forEach { item ->
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -106,7 +121,7 @@ fun CheckoutScreen(onBack: () -> Unit) {
                 }
             }
 
-            Divider(modifier = Modifier.padding(vertical = 15.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 15.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -142,6 +157,9 @@ fun CheckoutScreen(onBack: () -> Unit) {
                         if (success) {
                             Toast.makeText(context, "Order placed successfully!", Toast.LENGTH_SHORT).show()
                             cartViewModel.clearCart(userId)
+
+                            // Route to Success Screen
+                            context.startActivity(android.content.Intent(context, OrderSuccessActivity::class.java))
                             onBack()
                         } else {
                             Toast.makeText(context, "Error: $message", Toast.LENGTH_SHORT).show()
