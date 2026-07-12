@@ -81,9 +81,7 @@ fun ProfileScreen(navController: NavHostController) {
             ProfileOptionRow(Icons.Default.Settings, "Edit Profile") {
                 context.startActivity(Intent(context, EditProfileActivity::class.java))
             }
-            ProfileOptionRow(Icons.Default.ListAlt, "My Order History") {
-                // Future Implementation for Order History Activity
-            }
+
 
             if (user?.isAdmin == true) {
                 Spacer(Modifier.height(20.dp))

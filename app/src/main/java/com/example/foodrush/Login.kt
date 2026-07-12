@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -43,12 +44,9 @@ fun LoginBody(navController: NavHostController, viewModel: UserViewModel) {
     val context = LocalContext.current
 
     Column(modifier = Modifier.fillMaxSize().background(OrangePrimary)) {
-
         // Header
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 40.dp, bottom = 40.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = 40.dp, bottom = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text("FoodRush", fontSize = 42.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
@@ -61,119 +59,104 @@ fun LoginBody(navController: NavHostController, viewModel: UserViewModel) {
             color = Color.White,
             shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(30.dp)
-                    .verticalScroll(rememberScrollState())
+
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(30.dp)
             ) {
-                Text("Welcome Back", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                Text("Login to your account", fontSize = 14.sp, color = Color.Gray)
+                item {
+                    Text("Welcome Back", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                    Text("Login to your account", fontSize = 14.sp, color = Color.Gray)
 
-                Spacer(Modifier.height(30.dp))
+                    Spacer(Modifier.height(30.dp))
 
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Email", color = Color.Gray) },
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
-                    trailingIcon = { Icon(painterResource(R.drawable.baseline_email_24), contentDescription = null, tint = Color.Gray) },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black,
-                        focusedBorderColor = OrangePrimary,
-                        cursorColor = OrangePrimary
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Email", color = Color.Gray) },
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                        trailingIcon = { Icon(painterResource(R.drawable.baseline_email_24), contentDescription = null, tint = Color.Gray) },
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary)
                     )
-                )
 
-                Spacer(Modifier.height(15.dp))
+                    Spacer(Modifier.height(15.dp))
 
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Password", color = Color.Gray) },
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-                    visualTransformation = if (visibility) VisualTransformation.None else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        IconButton(onClick = { visibility = !visibility }) {
-                            Icon(
-                                painterResource(if (visibility) R.drawable.baseline_visibility_24 else R.drawable.outline_visibility_off_24),
-                                contentDescription = null, tint = Color.Gray
-                            )
-                        }
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black,
-                        focusedBorderColor = OrangePrimary,
-                        cursorColor = OrangePrimary
-                    )
-                )
-
-                Text(
-                    "Forgot Password?",
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(top = 8.dp)
-                        .clickable {
-                            navController.navigate(Screen.ForgotPassword.route)
-                        },
-                    color = OrangePrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp
-                )
-
-                Spacer(Modifier.height(30.dp))
-
-                Button(
-                    onClick = {
-                        if (email.isEmpty() || password.isEmpty()) {
-                            Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
-                            return@Button
-                        }
-                        isLoading = true
-                        viewModel.login(email, password) { success, msg ->
-                            isLoading = false
-                            if (success) {
-                                Toast.makeText(context, "Login Successful", Toast.LENGTH_SHORT).show()
-                                navController.navigate(Screen.Dashboard.route) {
-                                    popUpTo(Screen.Login.route) { inclusive = true }
-                                }
-                            } else {
-                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Password", color = Color.Gray) },
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                        visualTransformation = if (visibility) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { visibility = !visibility }) {
+                                Icon(painterResource(if (visibility) R.drawable.baseline_visibility_24 else R.drawable.outline_visibility_off_24), contentDescription = null, tint = Color.Gray)
                             }
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().height(55.dp),
-                    enabled = !isLoading,
-                    colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                    } else {
-                        Text("LOGIN", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    }
-                }
-
-                Spacer(Modifier.height(20.dp))
-
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                    Text("Don't have an account? ", color = Color.Gray)
-                    Text(
-                        "Sign Up",
-                        color = OrangePrimary,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable {
-                            navController.navigate(Screen.Registration.route)
-                        }
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary, cursorColor = OrangePrimary)
                     )
+
+                    Text(
+                        "Forgot Password?",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.End)
+                            .padding(top = 8.dp)
+                            .clickable { navController.navigate(Screen.ForgotPassword.route) },
+                        color = OrangePrimary,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
+
+                    Spacer(Modifier.height(30.dp))
+
+                    Button(
+                        onClick = {
+                            if (email.isEmpty() || password.isEmpty()) {
+                                Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+                            isLoading = true
+                            viewModel.login(email, password) { success, msg ->
+                                isLoading = false
+                                if (success) {
+                                    Toast.makeText(context, "Login Successful", Toast.LENGTH_SHORT).show()
+                                    navController.navigate(Screen.Dashboard.route) {
+                                        popUpTo(Screen.Login.route) { inclusive = true }
+                                    }
+                                } else {
+                                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(55.dp),
+                        enabled = !isLoading,
+                        colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                        } else {
+                            Text("LOGIN", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+                    }
+
+                    Spacer(Modifier.height(20.dp))
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                        Text("Don't have an account? ", color = Color.Gray)
+                        Text(
+                            "Sign Up",
+                            color = OrangePrimary,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.clickable { navController.navigate(Screen.Registration.route) }
+                        )
+                    }
                 }
             }
         }
@@ -188,3 +171,4 @@ fun LoginBodyPreview(){
         LoginBody(rememberNavController(), UserViewModel(UserRepoImpl()))
     }
 }
+

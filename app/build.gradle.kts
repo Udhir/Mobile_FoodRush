@@ -53,6 +53,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("com.cloudinary:cloudinary-android:2.1.0")
     implementation("io.coil-kt.coil3:coil-compose:3.3.0")
+    implementation(libs.androidx.compose.foundation)
     implementation(libs.firebase.storage)
     implementation(libs.coil.compose)
     implementation(libs.androidx.compose.ui)

@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -41,7 +42,6 @@ class CheckoutActivity : ComponentActivity() {
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckoutScreen(onBack: () -> Unit) {
@@ -62,12 +62,11 @@ fun CheckoutScreen(onBack: () -> Unit) {
 
     val totalPrice = cartItems.sumOf { it.foodPrice * it.quantity }
 
-    // ADDED: Common style for input field visibility!
     val inputFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedContainerColor = Color(0xFFF5F5F5), // Light Gray Background
-        unfocusedContainerColor = Color(0xFFF5F5F5), // Light Gray Background
+        focusedContainerColor = Color(0xFFF5F5F5),
+        unfocusedContainerColor = Color(0xFFF5F5F5),
         focusedBorderColor = OrangePrimary,
-        unfocusedBorderColor = Color(0xFFE0E0E0), // Soft visible border
+        unfocusedBorderColor = Color(0xFFE0E0E0),
         focusedTextColor = Color.Black,
         unfocusedTextColor = Color.Black,
         focusedLabelColor = OrangePrimary,
@@ -86,32 +85,34 @@ fun CheckoutScreen(onBack: () -> Unit) {
             )
         }
     ) { padding ->
-        Column(
+        // REPLACED Column with LazyColumn
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color(0xFFF8F9FA))
-                .padding(20.dp)
-                .verticalScroll(rememberScrollState())
+                .background(Color(0xFFF8F9FA)),
+            contentPadding = PaddingValues(20.dp)
         ) {
-            Text("Shipping Address", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Spacer(modifier = Modifier.height(10.dp))
+            item {
+                Text("Shipping Address", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(modifier = Modifier.height(10.dp))
 
-            // APPLIED THE COLORS HERE
-            OutlinedTextField(
-                value = address,
-                onValueChange = { address = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Enter your delivery address") },
-                shape = RoundedCornerShape(12.dp),
-                colors = inputFieldColors
-            )
+                OutlinedTextField(
+                    value = address,
+                    onValueChange = { address = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Enter your delivery address") },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = inputFieldColors
+                )
 
-            Spacer(modifier = Modifier.height(30.dp))
-            Text("Order Summary", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(30.dp))
+                Text("Order Summary", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(modifier = Modifier.height(10.dp))
+            }
 
-            cartItems.forEach { item ->
+            // Maps through the cart items correctly in a LazyColumn
+            items(cartItems) { item ->
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -121,60 +122,59 @@ fun CheckoutScreen(onBack: () -> Unit) {
                 }
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 15.dp))
+            item {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 15.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("Total", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                Text(
-                    "$${String.format(Locale.US, "%.2f", totalPrice)}",
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 20.sp,
-                    color = OrangePrimary
-                )
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-            Spacer(modifier = Modifier.height(30.dp))
-
-            Button(
-                onClick = {
-                    if (address.isBlank()) {
-                        Toast.makeText(context, "Please enter an address", Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
-                    isPlacingOrder = true
-                    val order = OrderModel(
-                        userId = userId,
-                        items = cartItems,
-                        totalPrice = totalPrice,
-                        address = address
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Total", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                    Text(
+                        "$${String.format(Locale.US, "%.2f", totalPrice)}",
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 20.sp,
+                        color = OrangePrimary
                     )
-                    orderViewModel.placeOrder(order) { success, message ->
-                        isPlacingOrder = false
-                        if (success) {
-                            Toast.makeText(context, "Order placed successfully!", Toast.LENGTH_SHORT).show()
-                            cartViewModel.clearCart(userId)
+                }
 
-                            // Route to Success Screen
-                            context.startActivity(android.content.Intent(context, OrderSuccessActivity::class.java))
-                            onBack()
-                        } else {
-                            Toast.makeText(context, "Error: $message", Toast.LENGTH_SHORT).show()
+                Spacer(modifier = Modifier.height(30.dp))
+
+                Button(
+                    onClick = {
+                        if (address.isBlank()) {
+                            Toast.makeText(context, "Please enter an address", Toast.LENGTH_SHORT).show()
+                            return@Button
                         }
+                        isPlacingOrder = true
+                        val order = OrderModel(
+                            userId = userId,
+                            items = cartItems,
+                            totalPrice = totalPrice,
+                            address = address
+                        )
+                        orderViewModel.placeOrder(order) { success, message ->
+                            isPlacingOrder = false
+                            if (success) {
+                                Toast.makeText(context, "Order placed successfully!", Toast.LENGTH_SHORT).show()
+                                cartViewModel.clearCart(userId)
+                                context.startActivity(android.content.Intent(context, OrderSuccessActivity::class.java))
+                                onBack()
+                            } else {
+                                Toast.makeText(context, "Error: $message", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(55.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
+                    shape = RoundedCornerShape(16.dp),
+                    enabled = !isPlacingOrder && cartItems.isNotEmpty()
+                ) {
+                    if (isPlacingOrder) {
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                    } else {
+                        Text("Place Order", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
-                },
-                modifier = Modifier.fillMaxWidth().height(55.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
-                shape = RoundedCornerShape(16.dp),
-                enabled = !isPlacingOrder && cartItems.isNotEmpty()
-            ) {
-                if (isPlacingOrder) {
-                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                } else {
-                    Text("Place Order", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
         }
