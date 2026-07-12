@@ -41,7 +41,6 @@ class AdminOrdersActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminOrdersScreen(onBack: () -> Unit) {
     val orderViewModel = remember { OrderViewModel(OrderRepoImpl()) }
@@ -88,15 +87,11 @@ fun AdminOrdersScreen(onBack: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminOrderCard(order: OrderModel, viewModel: OrderViewModel) {
     val dateStr = remember(order.timestamp) {
         SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()).format(Date(order.timestamp))
     }
-
-    var expanded by remember { mutableStateOf(false) }
-    val statuses = listOf("Pending", "OnTheWay", "Delivered", "Cancelled")
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -117,7 +112,7 @@ fun AdminOrderCard(order: OrderModel, viewModel: OrderViewModel) {
                 Text("${it.quantity}x ${it.foodName}", fontSize = 14.sp, color = Color.DarkGray)
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -125,39 +120,19 @@ fun AdminOrderCard(order: OrderModel, viewModel: OrderViewModel) {
             ) {
                 Text("Total: $${"%.2f".format(order.totalPrice)}", fontWeight = FontWeight.ExtraBold, color = OrangePrimary)
 
-                // Status Dropdown
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded }
-                ) {
-                    OutlinedTextField(
-                        value = order.status,
-                        onValueChange = {},
-                        readOnly = true,
-                        modifier = Modifier
-                            .width(140.dp)
-                            .menuAnchor(),
-                        textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = OrangePrimary,
-                            unfocusedBorderColor = Color.Gray
-                        )
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier.background(Color.White)
+                // ADDED: Simple Button instead of Buggy Dropdown
+                if (order.status != "Delivered") {
+                    Button(
+                        onClick = { viewModel.updateOrderStatus(order.orderId, "Delivered") },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                        modifier = Modifier.height(36.dp)
                     ) {
-                        statuses.forEach { selectionOption ->
-                            DropdownMenuItem(
-                                text = { Text(selectionOption) },
-                                onClick = {
-                                    viewModel.updateOrderStatus(order.orderId, selectionOption)
-                                    expanded = false
-                                }
-                            )
-                        }
+                        Text("Mark Delivered", fontSize = 12.sp, color = Color.White, fontWeight = FontWeight.Bold)
                     }
+                } else {
+                    Text("✔ Delivered", color = Color(0xFF4CAF50), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 }
             }
         }

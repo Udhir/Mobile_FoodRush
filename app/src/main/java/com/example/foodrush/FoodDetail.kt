@@ -1,5 +1,6 @@
 package com.example.foodrush
 
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -12,7 +13,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -138,14 +138,20 @@ fun FoodDetailScreen(foodId: String, foodViewModel: FoodViewModel, onBack: () ->
                             quantity = quantity
                         )
                         cartViewModel.addToCart(cartItem) { success, msg ->
-                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                            if (success) {
+                                // ADDED: Directly open the Checkout Screen!
+                                val intent = Intent(context, CheckoutActivity::class.java)
+                                context.startActivity(intent)
+                            } else {
+                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                            }
                         }
                     },
                     modifier = Modifier.fillMaxWidth().height(55.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
                     shape = RoundedCornerShape(15.dp)
                 ) {
-                    Text("Add to Cart", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("Buy Now", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
