@@ -9,3 +9,4 @@ interface CartRepo {
     fun removeFromCart(cartId: String, callback: (Boolean, String) -> Unit)
     fun clearCart(userId: String, callback: (Boolean, String) -> Unit)
 }
+
