@@ -37,21 +37,25 @@ fun CartScreen(navController: NavHostController, onCheckout: () -> Unit) {
     val context = LocalContext.current
     val cartViewModel = remember { CartViewModel(CartRepoImpl()) }
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
+    // Starts as empty while loading from Firebase
     val cartItems by cartViewModel.cartItems.observeAsState(emptyList())
 
-    // NEW: We track if the data has loaded at least once
-    var hasLoaded by remember { mutableStateOf(false) }
+    // NEW LOGIC: We track if the cart EVER had items in it during this visit
+    var hasEverHadItems by remember { mutableStateOf(false) }
 
     LaunchedEffect(userId) {
         if (userId.isNotEmpty()) {
             cartViewModel.getCartItems(userId)
-            hasLoaded = true // Now we know we've attempted to load data
         }
     }
 
-    // UPDATED LOGIC: Only navigate home if we have loaded data AND the list is empty
+    // THE FIX: Only navigate home if we HAD items, and now we don't (because you deleted them)
     LaunchedEffect(cartItems) {
-        if (hasLoaded && cartItems.isEmpty()) {
+        if (cartItems.isNotEmpty()) {
+            hasEverHadItems = true // Yes, we have items!
+        } else if (hasEverHadItems && cartItems.isEmpty()) {
+            // We HAD items, but now it's empty (User deleted the last item). Go home.
             navController.navigate(Screen.Dashboard.route) {
                 popUpTo(0) { inclusive = true }
             }
@@ -59,7 +63,7 @@ fun CartScreen(navController: NavHostController, onCheckout: () -> Unit) {
     }
 
     val totalPrice = cartItems.sumOf { it.foodPrice * it.quantity }
-    // ... (Keep the rest of your UI code exactly the same) ...
+
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F9FA))) {
         // Title
         Text(
@@ -70,14 +74,26 @@ fun CartScreen(navController: NavHostController, onCheckout: () -> Unit) {
             color = Color.Black
         )
 
-        // LazyColumn uses weight(1f) to fill available space and leave room at the bottom
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(bottom = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            items(cartItems) { item ->
-                CartItemCard(item, cartViewModel)
+        // Show empty message if cart is empty, otherwise show the list
+        if (cartItems.isEmpty()) {
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Text(
+                    text = "Your cart is empty \uD83D\uDE22",
+                    color = Color.Gray,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        } else {
+            // LazyColumn uses weight(1f) to fill available space and leave room at the bottom
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(bottom = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(cartItems) { item ->
+                    CartItemCard(item, cartViewModel)
+                }
             }
         }
 
@@ -106,8 +122,12 @@ fun CartScreen(navController: NavHostController, onCheckout: () -> Unit) {
                         context.startActivity(Intent(context, CheckoutActivity::class.java))
                     },
                     modifier = Modifier.fillMaxWidth().height(55.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
-                    shape = RoundedCornerShape(16.dp)
+                    colors = ButtonDefaults.buttonColors(
+                        // Make button gray if cart is empty, orange if it has items
+                        containerColor = if (cartItems.isEmpty()) Color.LightGray else OrangePrimary
+                    ),
+                    shape = RoundedCornerShape(16.dp),
+                    enabled = cartItems.isNotEmpty() // Disable button if cart is empty
                 ) {
                     Text("PROCEED TO CHECKOUT", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
