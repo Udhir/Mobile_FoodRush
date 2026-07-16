@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
@@ -47,7 +48,6 @@ fun ProfileScreen(navController: NavHostController) {
             .fillMaxSize()
             .background(Color(0xFFF8F9FA))
     ) {
-        // Top Orange Header Banner
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -84,6 +84,9 @@ fun ProfileScreen(navController: NavHostController) {
                 context.startActivity(Intent(context, EditProfileActivity::class.java))
             }
 
+            ProfileOptionRow(Icons.Default.ListAlt, "My Order History") {
+                context.startActivity(Intent(context, EditProfileActivity::class.java))
+            }
 
             if (user?.isAdmin == true) {
                 Spacer(Modifier.height(20.dp))
@@ -93,7 +96,11 @@ fun ProfileScreen(navController: NavHostController) {
                     navController.navigate(Screen.AddFood.route)
                 }
 
-                // FIXED: Added the Manage Orders button here for Admins!
+                ProfileOptionRow(Icons.Default.Edit, "Manage Food Items") {
+                    navController.navigate(Screen.AdminFoodList.route)
+                }
+
+
                 ProfileOptionRow(Icons.Default.ListAlt, "Manage All Orders") {
                     context.startActivity(Intent(context, AdminOrdersActivity::class.java))
                 }
