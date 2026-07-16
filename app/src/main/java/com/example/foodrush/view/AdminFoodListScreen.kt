@@ -20,7 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
+
 import com.example.foodrush.Screen
 import com.example.foodrush.model.FoodModel
 import com.example.foodrush.ui.theme.OrangePrimary

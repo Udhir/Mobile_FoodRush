@@ -23,18 +23,41 @@ class FoodRepoImpl : Foodrepo {
     override fun getAllFood(callback: (Boolean, String, List<FoodModel>) -> Unit) {
         foodRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val list = snapshot.children.mapNotNull { it.getValue(FoodModel::class.java) }
+                val list = mutableListOf<FoodModel>()
+                for (child in snapshot.children) {
+                    try {
+                        // FIXED: Added check to prevent crash if data is corrupted (e.g. a String instead of an Object)
+                        if (child.value is Map<*, *>) {
+                            val food = child.getValue(FoodModel::class.java)
+                            if (food != null && food.id.isNotEmpty()) {
+                                list.add(food)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
                 callback(true, "fetched", list)
             }
-            override fun onCancelled(error: DatabaseError) = callback(false, error.message, emptyList())
+            override fun onCancelled(error: DatabaseError) {
+                callback(false, "Cancelled", emptyList())
+            }
         })
     }
+
+
 
     override fun getFoodByCategory(category: String, callback: (Boolean, String, List<FoodModel>) -> Unit) {
         foodRef.orderByChild("category").equalTo(category)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    val list = snapshot.children.mapNotNull { it.getValue(FoodModel::class.java) }
+                    val list = mutableListOf<FoodModel>()
+                    for (child in snapshot.children) {
+                        try {
+                            val food = child.getValue(FoodModel::class.java)
+                            if (food != null) list.add(food)
+                        } catch (e: Exception) {}
+                    }
                     callback(true, "fetched", list)
                 }
                 override fun onCancelled(error: DatabaseError) = callback(false, error.message, emptyList())
@@ -44,7 +67,11 @@ class FoodRepoImpl : Foodrepo {
     override fun getFoodById(id: String, callback: (Boolean, String, FoodModel?) -> Unit) {
         foodRef.child(id).addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                callback(true, "fetched", snapshot.getValue(FoodModel::class.java))
+                try {
+                    callback(true, "fetched", snapshot.getValue(FoodModel::class.java))
+                } catch (e: Exception) {
+                    callback(false, "Corrupted data", null)
+                }
             }
             override fun onCancelled(error: DatabaseError) = callback(false, error.message, null)
         })
@@ -53,7 +80,13 @@ class FoodRepoImpl : Foodrepo {
     override fun getAllCategories(callback: (Boolean, String, List<CategoryModel>) -> Unit) {
         categoryRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val list = snapshot.children.mapNotNull { it.getValue(CategoryModel::class.java) }
+                val list = mutableListOf<CategoryModel>()
+                for (child in snapshot.children) {
+                    try {
+                        val cat = child.getValue(CategoryModel::class.java)
+                        if (cat != null) list.add(cat)
+                    } catch (e: Exception) {}
+                }
                 callback(true, "fetched", list)
             }
             override fun onCancelled(error: DatabaseError) = callback(false, error.message, emptyList())

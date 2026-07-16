@@ -8,9 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -23,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodrush.model.CartModel
 import com.example.foodrush.model.OrderModel
 import com.example.foodrush.repo.CartRepoImpl
 import com.example.foodrush.repo.OrderRepoImpl
@@ -77,14 +76,16 @@ fun CheckoutScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Checkout", fontWeight = FontWeight.Bold) },
+                title = { Text("Checkout", fontWeight = FontWeight.Bold, color = Color.Black) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.Black)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
-        }
+        },
+        containerColor = Color(0xFFF8F9FA) // Keep background light
     ) { padding ->
         // REPLACED Column with LazyColumn
         LazyColumn(
@@ -140,6 +141,28 @@ fun CheckoutScreen(onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(30.dp))
+
+                // --- ADDED THIS SECTION FOR CASH ON DELIVERY UI ---
+                Text("Payment Method", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White, RoundedCornerShape(12.dp))
+                        .padding(16.dp)
+                ) {
+                    RadioButton(
+                        selected = true,
+                        onClick = { /* Only COD is supported */ },
+                        colors = RadioButtonDefaults.colors(selectedColor = OrangePrimary)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Cash on Delivery (COD)", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color.Black)
+                }
+                Spacer(modifier = Modifier.height(30.dp))
+                // --------------------------------------------------
 
                 Button(
                     onClick = {

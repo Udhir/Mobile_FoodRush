@@ -38,4 +38,6 @@ class OrderViewModel(private val repo: OrderRepo) : ViewModel() {
     fun updateOrderStatus(orderId: String, status: String) {
         repo.updateOrderStatus(orderId, status) { _, _ -> }
     }
+
+    fun getUserOrders(userId: String) {}
 }

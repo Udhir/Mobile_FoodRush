@@ -1,4 +1,4 @@
-package com.example.foodrush.repo // Changed to your app's package!
+package com.example.foodrush.repo
 
 import android.content.Context
 import android.database.Cursor
@@ -27,26 +27,27 @@ class ImageRepoImpl : ImageRepo {
         executor.execute {
             try {
                 val inputStream: InputStream? = context.contentResolver.openInputStream(imageUri)
-                var fileName = getFileNameFromUri(context, imageUri)
 
-                // Removes the file extension (e.g., .jpg) for Cloudinary
-                fileName = fileName?.substringBeforeLast(".") ?: "uploaded_image"
-
+                // FIXED: We removed the "public_id" parameter.
+                // Now, Cloudinary will auto-generate a random, unique ID for every single photo.
+                // This completely prevents the caching/deleted image bugs!
                 val response = cloudinary.uploader().upload(
                     inputStream, ObjectUtils.asMap(
-                        "public_id", fileName,
                         "resource_type", "image"
                     )
                 )
 
-                var imageUrl = response["url"] as String?
-
-                // Forces the image URL to be HTTPS (secure) so Android allows it to load
-                imageUrl = imageUrl?.replace("http://", "https://")
+                // FIXED: Get the guaranteed secure HTTPS link directly from Cloudinary
+                // Using .toString() ensures we get a String even if the response object is different
+                val imageUrl = response["secure_url"]?.toString() ?: response["url"]?.toString()
 
                 // Returns the URL back to the main UI thread
                 Handler(Looper.getMainLooper()).post {
-                    callback(imageUrl)
+                    if (imageUrl != null) {
+                        callback(imageUrl)
+                    } else {
+                        callback(null)
+                    }
                 }
 
             } catch (e: Exception) {
@@ -58,6 +59,8 @@ class ImageRepoImpl : ImageRepo {
         }
     }
 
+    // Keep this function here because your ImageRepo interface requires it,
+    // even though we aren't using it for the upload anymore!
     override fun getFileNameFromUri(context: Context, uri: Uri): String? {
         var fileName: String? = null
         val cursor: Cursor? = context.contentResolver.query(uri, null, null, null, null)

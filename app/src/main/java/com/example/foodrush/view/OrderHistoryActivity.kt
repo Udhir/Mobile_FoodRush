@@ -3,14 +3,13 @@ package com.example.foodrush.view
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -27,12 +26,12 @@ import com.example.foodrush.ui.theme.OrangePrimary
 import com.example.foodrush.viewmodel.OrderViewModel
 import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 class OrderHistoryActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             FoodRushTheme {
                 OrderHistoryScreen(onBack = { finish() })
@@ -44,46 +43,52 @@ class OrderHistoryActivity : ComponentActivity() {
 @Composable
 fun OrderHistoryScreen(onBack: () -> Unit) {
     val orderViewModel = remember { OrderViewModel(OrderRepoImpl()) }
+    val orders by orderViewModel.orders.observeAsState(emptyList())
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
-        if (userId.isNotEmpty()) {
-            orderViewModel.getOrders(userId)
-        }
+        orderViewModel.getUserOrders(userId)
+        kotlinx.coroutines.delay(800)
+        isLoading = false
     }
-
-    val orders by orderViewModel.orders.observeAsState(emptyList())
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF8F9FA))
-            .systemBarsPadding()
     ) {
+        // --- CUSTOM SIMPLE TOP BAR ---
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(OrangePrimary)
-                .padding(16.dp),
+                .background(Color.White)
+                .padding(horizontal = 8.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.Black)
             }
-            Text("My Order History", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text("My Orders", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color.Black)
         }
 
-        if (orders.isEmpty()) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("You have no orders yet.", color = Color.Gray)
+        // Add a tiny shadow-like divider under the top bar
+        HorizontalDivider(color = Color(0xFFE0E0E0), thickness = 1.dp)
+
+        // --- MAIN CONTENT ---
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = OrangePrimary)
+            }
+        } else if (orders.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("You have no past orders.", color = Color.Gray, fontSize = 16.sp)
             }
         } else {
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp)) {
                 items(orders) { order ->
-                    OrderHistoryCard(order)
+                    UserOrderCard(order = order)
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
             }
         }
@@ -91,52 +96,41 @@ fun OrderHistoryScreen(onBack: () -> Unit) {
 }
 
 @Composable
-fun OrderHistoryCard(order: OrderModel) {
-    val dateStr = remember(order.timestamp) {
-        SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()).format(Date(order.timestamp))
-    }
+fun UserOrderCard(order: OrderModel) {
+    val date = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()).format(Date(order.timestamp))
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
-        Column(Modifier.padding(14.dp)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Order #${order.orderId.takeLast(6)}", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                StatusBadge(order.status)
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Order ID: ${order.orderId.takeLast(6)}", fontWeight = FontWeight.Bold)
+                Text(date, fontSize = 12.sp, color = Color.Gray)
             }
-            Spacer(Modifier.height(4.dp))
-            Text(dateStr, fontSize = 12.sp, color = Color.Gray)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Address: ${order.address}", fontSize = 14.sp)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text("Items: ${order.items.joinToString { "${it.foodName} (x${it.quantity})" }}", fontSize = 14.sp, color = Color.DarkGray)
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("Total: NPR ${order.totalPrice}", fontWeight = FontWeight.Bold, color = OrangePrimary)
 
-            Spacer(Modifier.height(8.dp))
-
-            order.items.forEach {
-                Text("${it.quantity} x ${it.foodName}", fontSize = 14.sp, color = Color.DarkGray)
+                Surface(
+                    color = if (order.status == "Delivered") Color(0xFFE8F5E9) else Color(0xFFFFF3E0),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = order.status,
+                        color = if (order.status == "Delivered") Color(0xFF2E7D32) else OrangePrimary,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    )
+                }
             }
-
-            Spacer(Modifier.height(8.dp))
-            Text("Total: $${"%.2f".format(order.totalPrice)}", fontWeight = FontWeight.ExtraBold, color = OrangePrimary, fontSize = 16.sp)
         }
-    }
-}
-
-@Composable
-fun StatusBadge(status: String) {
-    val color = when (status) {
-        "Delivered" -> Color(0xFF4CAF50)
-        "Cancelled" -> Color(0xFFF44336)
-        "OnTheWay" -> Color(0xFF2196F3)
-        else -> Color(0xFFFF9800)
-    }
-    Surface(shape = RoundedCornerShape(20.dp), color = color.copy(alpha = 0.15f)) {
-        Text(
-            text = status,
-            color = color,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-        )
     }
 }

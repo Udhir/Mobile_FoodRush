@@ -72,11 +72,11 @@ fun AppNavigation(
         }
 
         // FIXED: Passing the navController here!
-        composable(Screen.Cart.route) {
-            CartScreen(
-                navController = navController,
-                onCheckout = { navController.popBackStack() }
-            )
+        composable("cart") {
+            // This opens the CartScreen as a standalone page so they can checkout instantly
+            CartScreen(navController = navController, onCheckout = {
+                navController.popBackStack()
+            })
         }
 
         composable(Screen.AdminFoodList.route) {

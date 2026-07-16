@@ -7,8 +7,8 @@ data class UserModel(
     val name : String = "",
     val email : String = "",
     val password : String = "",
-    @get:PropertyName("isAdmin")
-    @set:PropertyName("isAdmin")
+    @get:PropertyName("admin")
+    @set:PropertyName("admin")
     var isAdmin: Boolean = false
 ){
     fun toMap() : Map<String, Any>{
@@ -16,7 +16,7 @@ data class UserModel(
             "name" to name,
             "email" to email,
             "password" to password,
-            "isAdmin" to isAdmin
+            "admin" to isAdmin
         )
     }
 }

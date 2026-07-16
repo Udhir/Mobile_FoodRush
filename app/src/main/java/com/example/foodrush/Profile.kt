@@ -29,9 +29,9 @@ import androidx.navigation.NavHostController
 import com.example.foodrush.repo.UserRepoImpl
 import com.example.foodrush.ui.theme.OrangePrimary
 import com.example.foodrush.view.AdminOrdersActivity
+import com.example.foodrush.view.OrderHistoryActivity // FIXED IMPORT
 import com.example.foodrush.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
-import kotlin.jvm.java
 
 @Composable
 fun ProfileScreen(navController: NavHostController) {
@@ -85,7 +85,8 @@ fun ProfileScreen(navController: NavHostController) {
             }
 
             ProfileOptionRow(Icons.Default.ListAlt, "My Order History") {
-                context.startActivity(Intent(context, EditProfileActivity::class.java))
+                // FIXED: This now properly opens your OrderHistoryActivity!
+                context.startActivity(Intent(context, OrderHistoryActivity::class.java))
             }
 
             if (user?.isAdmin == true) {
@@ -93,13 +94,12 @@ fun ProfileScreen(navController: NavHostController) {
                 Text("Admin Panel", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 10.dp))
 
                 ProfileOptionRow(Icons.Default.Add, "Add New Food Item") {
-                    navController.navigate(Screen.AddFood.route)
+                    navController.navigate("add_food")
                 }
 
                 ProfileOptionRow(Icons.Default.Edit, "Manage Food Items") {
                     navController.navigate(Screen.AdminFoodList.route)
                 }
-
 
                 ProfileOptionRow(Icons.Default.ListAlt, "Manage All Orders") {
                     context.startActivity(Intent(context, AdminOrdersActivity::class.java))

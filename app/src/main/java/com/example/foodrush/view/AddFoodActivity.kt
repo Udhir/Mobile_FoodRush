@@ -35,7 +35,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
+
 import com.example.foodrush.model.FoodModel
 import com.example.foodrush.repo.FoodRepoImpl
 import com.example.foodrush.repo.ImageRepoImpl
@@ -149,7 +150,7 @@ fun AddFoodScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             Surface(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.weight(1f).fillMaxWidth(),
                 color = Color.White,
                 shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp)
             ) {
@@ -170,19 +171,21 @@ fun AddFoodScreen(
                                 },
                             contentAlignment = Alignment.Center
                         ) {
-                            if (imageUri != null) {
+                            // FIXED: Use a more robust check for whether to show an image or the upload icon
+                            val hasNewImage = imageUri != null
+                            val hasExistingImage = !existingImageUrl.isNullOrBlank()
+
+                            if (hasNewImage || hasExistingImage) {
+                                val modelToDisplay = if (hasNewImage) imageUri else existingImageUrl
                                 AsyncImage(
-                                    model = imageUri,
-                                    contentDescription = "Selected Image",
+                                    model = modelToDisplay,
+                                    contentDescription = "Food Image",
                                     contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            } else if (existingImageUrl != null) {
-                                AsyncImage(
-                                    model = existingImageUrl,
-                                    contentDescription = "Existing Image",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
+                                    modifier = Modifier.fillMaxSize(),
+                                    // FIXED: Use the upload icon as a placeholder/error here instead of a burger
+                                    placeholder = painterResource(id = R.drawable.outline_add_photo_alternate_24),
+                                    error = painterResource(id = R.drawable.outline_add_photo_alternate_24),
+                                    fallback = painterResource(id = R.drawable.outline_add_photo_alternate_24)
                                 )
                             } else {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -344,7 +347,8 @@ fun AddFoodScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(20.dp))
+                        // FIXED: Added a large spacer at the bottom so the last buttons are easy to reach while scrolling
+                        Spacer(modifier = Modifier.height(50.dp))
                     }
                 }
             }

@@ -26,6 +26,7 @@ class FoodViewModel(val repo: Foodrepo) : ViewModel() {
         }
     }
 
+
     fun getAllCategories() {
         repo.getAllCategories { success, _, data ->
             _categories.value = if (success) data else emptyList()
