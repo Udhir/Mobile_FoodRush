@@ -11,6 +11,7 @@ import androidx.navigation.navArgument
 import com.example.foodrush.repo.FoodRepoImpl
 import com.example.foodrush.repo.UserRepoImpl
 import com.example.foodrush.view.AddFoodScreen
+import com.example.foodrush.view.AdminFoodListScreen
 import com.example.foodrush.viewmodel.FoodViewModel
 import com.example.foodrush.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -78,7 +79,9 @@ fun AppNavigation(
             )
         }
 
-        composable(Screen.AdminFoodList.route) { }
+        composable(Screen.AdminFoodList.route) {
+            AdminFoodListScreen(navController = navController, foodViewModel = foodViewModel)
+        }
 
         composable(
             Screen.AddFood.route,
@@ -114,3 +117,6 @@ fun LoginScreen(navController: NavHostController, viewModel: UserViewModel) {
 fun RegistrationScreen(navController: NavHostController, viewModel: UserViewModel) {
     RegistrationBody(navController, viewModel)
 }
+
+
+
