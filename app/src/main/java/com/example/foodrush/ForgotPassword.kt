@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -80,7 +81,7 @@ fun ForgotPasswordScreen(navController: NavHostController, userViewModel: UserVi
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().testTag("forgotEmailField"),
                         label = { Text("Email Address") },
                         shape = RoundedCornerShape(12.dp),
                         singleLine = true,
@@ -103,7 +104,7 @@ fun ForgotPasswordScreen(navController: NavHostController, userViewModel: UserVi
                                 }
                             }
                         },
-                        modifier = Modifier.fillMaxWidth().height(55.dp),
+                        modifier = Modifier.fillMaxWidth().height(55.dp).testTag("resetButton"),
                         colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
                         shape = RoundedCornerShape(12.dp)
                     ) {

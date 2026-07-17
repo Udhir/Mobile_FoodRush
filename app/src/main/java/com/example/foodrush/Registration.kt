@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -86,7 +87,7 @@ fun RegistrationBody(navController: NavHostController, viewModel: UserViewModel)
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().testTag("registerName"),
                         label = { Text("Full Name") },
                         shape = RoundedCornerShape(12.dp),
                         singleLine = true,
@@ -99,7 +100,7 @@ fun RegistrationBody(navController: NavHostController, viewModel: UserViewModel)
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().testTag("registerEmail"),
                         label = { Text("Email") },
                         shape = RoundedCornerShape(12.dp),
                         singleLine = true,
@@ -112,7 +113,7 @@ fun RegistrationBody(navController: NavHostController, viewModel: UserViewModel)
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().testTag("registerPassword"),
                         label = { Text("Password") },
                         shape = RoundedCornerShape(12.dp),
                         singleLine = true,
@@ -131,7 +132,7 @@ fun RegistrationBody(navController: NavHostController, viewModel: UserViewModel)
                     OutlinedTextField(
                         value = confirmPassword,
                         onValueChange = { confirmPassword = it },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().testTag("registerConfirmPassword"),
                         label = { Text("Confirm Password") },
                         shape = RoundedCornerShape(12.dp),
                         singleLine = true,
@@ -181,7 +182,7 @@ fun RegistrationBody(navController: NavHostController, viewModel: UserViewModel)
                                 }
                             }
                         },
-                        modifier = Modifier.fillMaxWidth().height(55.dp),
+                        modifier = Modifier.fillMaxWidth().height(55.dp).testTag("registerButton"),
                         enabled = !isLoading,
                         colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
                         shape = RoundedCornerShape(12.dp)
