@@ -1,4 +1,4 @@
-// model/FoodModel.kt
+
 package com.example.foodrush.model
 
 import com.google.firebase.database.PropertyName
